@@ -26,3 +26,23 @@ test('begin the descent → opening → gameplay; keyboard moves the player', as
   expect(Math.hypot(after[0] - before[0], after[2] - before[2])).toBeGreaterThan(0.5);
   expect(errors).toEqual([]);
 });
+
+test('the full opening hands the camera back with the player in view', async ({ page }) => {
+  const errors = await bootGame(page);
+  await page.getByRole('button', { name: /Begin the Descent|New Descent/ }).click();
+  await page.waitForFunction(() => (window as any).__MOYUE__.mode === 'cutscene', null, { timeout: 30_000 });
+  // no input: let the whole cutscene play out
+  await page.waitForFunction(() => (window as any).__MOYUE__.mode === 'play', null, { timeout: 90_000 });
+  await page.waitForTimeout(1500);
+  const view = await page.evaluate(() => {
+    const g = (window as any).__MOYUE__;
+    const cam = g.cam.camera.position;
+    const head = g.player.position.clone();
+    head.y += 0.6;
+    return { cinematic: g.cam.cinematic, dist: cam.distanceTo(head), los: g.physics.hasLineOfSight(cam, head) };
+  });
+  expect(view.cinematic).toBeNull();
+  expect(view.dist).toBeLessThan(8);
+  expect(view.los).toBe(true);
+  expect(errors).toEqual([]);
+});

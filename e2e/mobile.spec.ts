@@ -69,6 +69,17 @@ test('touch: stick moves, jump button jumps, strike button attacks, simultaneous
   await ctx.close();
 });
 
+test('touch devices get touch wording in hints before any input', async ({ browser }) => {
+  const ctx = await browser.newContext({ ...devices['iPhone 13 landscape'], viewport: { width: 844, height: 390 } });
+  const page = await ctx.newPage();
+  await bootGame(page, 'quality=low&play=1');
+  await page.waitForFunction(() => document.querySelector('.moyue-hint.show')?.textContent?.includes('move'), null, { timeout: 20_000 });
+  const text = await page.locator('.moyue-hint').textContent();
+  expect(text).toContain('left thumb');
+  expect(text).not.toContain('WASD');
+  await ctx.close();
+});
+
 test('touch: pause button opens the pause menu and resume returns to play', async ({ browser }) => {
   const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true });
   const page = await ctx.newPage();

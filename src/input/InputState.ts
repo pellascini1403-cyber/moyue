@@ -1,3 +1,4 @@
+import { Env } from '../core/env';
 export type ButtonId = 'jump' | 'attack' | 'dash' | 'special' | 'interact' | 'lock' | 'pause' | 'map';
 export const BUTTONS: ButtonId[] = ['jump', 'attack', 'dash', 'special', 'interact', 'lock', 'pause', 'map'];
 
@@ -32,7 +33,8 @@ export class InputState {
   /** Continuous look rate from a stick (radians/sec). */
   lookRateX = 0;
   lookRateY = 0;
-  lastSource: SourceId = 'kb';
+  /** Drives on-screen prompts; touch devices start with touch wording until a key or pad is used. */
+  lastSource: SourceId = Env.touch ? 'touch' : 'kb';
   /** Set by UI when a menu has focus; gameplay then sees no input. */
   blocked = false;
 

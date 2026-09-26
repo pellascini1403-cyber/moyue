@@ -569,13 +569,18 @@ export class Game implements MenuHost {
     this.audio.setMusic('opening');
     this.audio.setAmbience('cave');
     setTimeout(() => this.curtain.classList.remove('on'), 400);
+    // end behind the player's shoulder, pulled in so the tomb walls never swallow the camera
+    const head = p.clone().add(new Vector3(0, 1.1, 0));
+    const back = new Vector3(Math.sin(this.player.ctrl.facing + Math.PI) * 5.5, 1.3, Math.cos(this.player.ctrl.facing + Math.PI) * 5.5);
+    const reach = back.length();
+    back.divideScalar(reach);
+    const target = head.clone().addScaledVector(back, Math.max(1.4, this.physics.sphereCast(head, back, 0.35, reach) - 0.25));
     this.cutscene = {
       t: 0,
       dur: 5.2,
       update: (t) => {
         const k = Math.min(1, t / 5);
         const e = k * k * (3 - 2 * k);
-        const target = p.clone().add(new Vector3(Math.sin(this.player.ctrl.facing + Math.PI) * 5.5, 2.4, Math.cos(this.player.ctrl.facing + Math.PI) * 5.5));
         this.cam.cinematic = { pos: camStart.clone().lerp(target, e), look: p.clone().add(new Vector3(0, 0.6 + e * 0.3, 0)), lambda: 6 };
         if (t > 1.4 && t < 1.5) {
           this.sfx('awaken', p);
@@ -591,6 +596,8 @@ export class Game implements MenuHost {
       },
       done: () => {
         this.setFlag('intro_done', true);
+        // hand over to the orbit camera (it inherits yaw/distance from the cinematic pose)
+        this.cam.cinematic = null;
         this.beginPlay();
       },
     };
