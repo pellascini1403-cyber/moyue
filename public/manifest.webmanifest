@@ -1,0 +1,16 @@
+{
+  "name": "Mòyuè — The Eternal Descent",
+  "short_name": "Mòyuè",
+  "description": "A tiny cicada-born warrior descends into a forgotten civilisation beneath the world.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#05070b",
+  "theme_color": "#05070b",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
