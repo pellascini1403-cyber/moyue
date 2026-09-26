@@ -6,6 +6,7 @@ import { Rig } from '../../anim/Rig';
 import { characterMaterial } from '../materials';
 import { addOutlines, outlineMaterial, wingMaterial } from './charMaterials';
 import { latheG, taperTubeG, torusG } from '../geo/basic';
+import { mergeRigParts } from './merge';
 
 function mesh(g: BufferGeometry, m: Material, outline = true, name = ''): Mesh {
   const me = new Mesh(g, m);
@@ -322,6 +323,7 @@ export function buildPlayerModel(): PlayerView {
   }
 
   const scarf = new Scarf(new Color(0x9a1e1c));
+  mergeRigParts(root);
   const outlines = addOutlines(root, outlineMaterial(0.012));
   return {
     root, body, rig, eyeMat, bladeMat, bladeTip, wingMats, scarf,

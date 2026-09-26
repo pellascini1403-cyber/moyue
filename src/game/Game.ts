@@ -274,6 +274,18 @@ export class Game implements MenuHost {
     for (const s of r.content.spawns) {
       switch (s.type) {
         case 'enemy': {
+          const arena = s.arena ? r.content.spawns.find((x) => x.type === 'arena' && x.id === s.arena) as Extract<SpawnDef, { type: 'arena' }> | undefined : undefined;
+          if (arena && arena.boss === s.id) {
+            // bosses are present from the start, waiting in stillness
+            const b = spawnEnemy(this, s.kind, s.id, rid, s.pos, s.yaw ?? 0);
+            b.dormant = b.startsDormant = true;
+            b.permanentDeath = true;
+            b.arenaId = arena.id;
+            b.leash = 40;
+            if (s.kind === 'tollingAbbot') (b as unknown as { arenaCenter: Vector3 }).arenaCenter.set(arena.pos.x, s.pos.y, arena.pos.z);
+            this.addEntity(b);
+            break;
+          }
           if (s.arena) break; // spawned by the arena
           const e = spawnEnemy(this, s.kind, s.id, rid, s.pos, s.yaw ?? 0);
           if (s.leash) e.leash = s.leash;
@@ -1069,6 +1081,17 @@ export class Game implements MenuHost {
     for (const id of ids) {
       const s = region.content.spawns.find((x) => x.type === 'enemy' && x.id === id) as Extract<SpawnDef, { type: 'enemy' }> | undefined;
       if (!s) continue;
+      const waiting = this.entities.find((x) => x instanceof Enemy && x.id === id && x.dormant) as Enemy | undefined;
+      if (waiting) {
+        waiting.dormant = false;
+        waiting.aware = true;
+        this.bossEnemy = waiting;
+        this.bossName = s.kind === 'censerWarden' ? 'Censer Warden' : 'The Tolling Abbot';
+        a.enemies.push(waiting);
+        this.sfx('bossAwaken', waiting.position);
+        this.shake(0.5);
+        continue;
+      }
       const e = spawnEnemy(this, s.kind, `${s.id}`, a.region, s.pos, s.yaw ?? 0);
       e.spawnedByArena = true;
       e.arenaId = a.def.id;
@@ -1099,6 +1122,10 @@ export class Game implements MenuHost {
       this.writeSave();
     } else {
       for (const e of a.enemies) {
+        if (e.startsDormant) {
+          e.reset();
+          continue;
+        }
         e.alive = false;
         e.dead = true;
         e.root.visible = false;

@@ -7,6 +7,7 @@ import { addOutlines, outlineMaterial, wingMaterial } from './charMaterials';
 import { latheG, taperTubeG } from '../geo/basic';
 import { lanternTexture } from '../textures';
 import { bellGeometry } from '../geo/props';
+import { mergeRigParts } from './merge';
 
 function part(g: BufferGeometry, m: Material, outline = true): Mesh {
   const me = new Mesh(g, m);
@@ -65,6 +66,7 @@ export function buildInkMite(): InkMiteView {
     root.add(leg);
     legs.push(leg);
   }
+  mergeRigParts(root);
   addOutlines(root, outlineMaterial(0.012));
   return { root, body, legs, eyes };
 }
@@ -132,6 +134,7 @@ export function buildLanternWisp(): WispView {
   const glow = new Sprite(glowSpriteMaterial(new Color(1.0, 0.55, 0.2), 0.9));
   glow.scale.setScalar(2.2);
   lantern.add(glow);
+  mergeRigParts(root);
   addOutlines(root, outlineMaterial(0.01));
   return { root, lantern, wings, glow, core, paper };
 }
@@ -210,6 +213,7 @@ export function buildShieldback(): ShieldbackView {
     root.add(leg);
     legs.push(leg);
   }
+  mergeRigParts(root);
   addOutlines(root, outlineMaterial(0.014));
   return { root, body, shield, glaive, head, legs, eyes };
 }
@@ -278,6 +282,7 @@ export function buildCenserWarden(): WardenView {
   const chain = new Mesh(new BufferGeometry(), characterMaterial({ color: 0x2b2a28, metalness: 0.6, roughness: 0.4 }, emberRim));
   chain.frustumCulled = false;
   root.add(chain);
+  mergeRigParts(root);
   addOutlines(root, outlineMaterial(0.02));
   return { root, body, armR, censer, chainPts, chain, head, embers, eyes };
 }
@@ -342,6 +347,7 @@ export function buildTollingAbbot(): AbbotView {
   const crack = new MeshBasicMaterial({ color: new Color(2.6, 0.8, 0.2), transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, side: DoubleSide });
   const crackMesh = new Mesh(taperTubeG([new Vector3(0.9, 0.9, 0.5), new Vector3(1.05, 0.3, 0.6), new Vector3(1.1, -0.2, 0.3), new Vector3(1.2, -0.8, 0.5)], 0.05, 0.02, 10, 4), crack);
   bell.add(crackMesh);
+  mergeRigParts(root);
   addOutlines(root, outlineMaterial(0.028));
   return { root, body, bell, bellMat: bronze, head, armL, armR, eyes, crack };
 }

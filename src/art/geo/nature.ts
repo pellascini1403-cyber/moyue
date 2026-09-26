@@ -8,6 +8,7 @@ import { Rng } from '../../core/rng';
 import { cylG, latheG, sphereG, taperTubeG } from './basic';
 import { inkMountainsTexture, mistTexture, shaftTexture, waterfallTexture } from '../textures';
 import { WorldUniforms } from '../materials';
+import { fogUniforms } from '../shaderFog';
 
 /** Noise-displaced boulder (unit size, scaled by caller). */
 export function boulderGeometry(seed: number, detail = 1, squash = 0.7): BufferGeometry {
@@ -196,9 +197,14 @@ export function lightShaft(ctx: BuildContext, x: number, y: number, z: number, w
 export function waterfall(ctx: BuildContext, x: number, yTop: number, z: number, width: number, height: number, rotY: number, color = 0xa9c8e0): void {
   const tex = waterfallTexture();
   const mat = new ShaderMaterial({
-    uniforms: { uMap: { value: tex }, uTime: WorldUniforms.uTime, uColor: { value: new Color(color) } },
-    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
-    fragmentShader: `uniform sampler2D uMap; uniform float uTime; uniform vec3 uColor; varying vec2 vUv;
+    uniforms: { ...fogUniforms(), uMap: { value: tex }, uTime: WorldUniforms.uTime, uColor: { value: new Color(color) } },
+    fog: true,
+    vertexShader: `#include <fog_pars_vertex>
+      varying vec2 vUv; void main(){ vUv = uv; vec4 mvPosition = modelViewMatrix * vec4(position,1.0); gl_Position = projectionMatrix * mvPosition;
+      #include <fog_vertex>
+      }`,
+    fragmentShader: `#include <fog_pars_fragment>
+      uniform sampler2D uMap; uniform float uTime; uniform vec3 uColor; varying vec2 vUv;
       void main(){
         vec2 uv = vec2(vUv.x * 2.0, vUv.y * 3.0 + uTime * 1.4);
         float a = texture2D(uMap, uv).a;
@@ -208,6 +214,7 @@ export function waterfall(ctx: BuildContext, x: number, yTop: number, z: number,
         float fadeBot = smoothstep(0.0, 0.2, vUv.y);
         float alpha = (a * 0.55 + b * 0.45) * edge * fadeTop * mix(0.35, 1.0, fadeBot);
         gl_FragColor = vec4(uColor * (0.7 + b * 0.6), alpha * 0.8);
+        #include <fog_fragment>
       }`,
     transparent: true, depthWrite: false, side: DoubleSide,
   });

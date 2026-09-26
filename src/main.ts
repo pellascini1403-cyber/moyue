@@ -4,6 +4,7 @@ import { Game } from './game/Game';
 import { REGIONS } from './world/regions';
 import { allAbilities } from './player/Abilities';
 import { Quality } from './save/Settings';
+import { AudioEngine } from './audio/AudioEngine';
 
 /**
  * Debug URL parameters (for development & automated tests):
@@ -18,6 +19,8 @@ async function boot(): Promise<void> {
   const container = document.getElementById('moyue-root')!;
   const game = new Game(container, REGIONS);
   (window as unknown as { __MOYUE__: Game }).__MOYUE__ = game;
+  game.audio = new AudioEngine();
+  game.applySettings();
   const q = params.get('quality') as Quality | null;
   if (q && ['low', 'medium', 'high', 'auto'].includes(q)) {
     game.renderer.setQuality(q);

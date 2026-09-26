@@ -7,15 +7,23 @@ import { boulder, hangingRoots, stalactite, deadTree, reeds } from '../../art/ge
 import { bannerGeometry } from '../../art/geo/structures';
 import { REGION_TEXT } from '../../story/lore';
 import { WorldUniforms } from '../../art/materials';
+import { fogUniforms } from '../../art/shaderFog';
 
 const T = REGION_TEXT.sanctum;
 
 /** Glowing cinnabar pool surface (hazard visual). */
 function crimsonPool(w: number, d: number): Mesh {
   const m = new ShaderMaterial({
-    uniforms: { uTime: WorldUniforms.uTime },
-    vertexShader: `varying vec2 vUv; varying vec3 vW; void main(){ vUv = uv; vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
-    fragmentShader: `uniform float uTime; varying vec2 vUv; varying vec3 vW;
+    uniforms: { ...fogUniforms(), uTime: WorldUniforms.uTime },
+    fog: true,
+    vertexShader: `#include <fog_pars_vertex>
+      varying vec2 vUv; varying vec3 vW;
+      void main(){ vUv = uv; vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz;
+        vec4 mvPosition = viewMatrix * w; gl_Position = projectionMatrix * mvPosition;
+        #include <fog_vertex>
+      }`,
+    fragmentShader: `#include <fog_pars_fragment>
+      uniform float uTime; varying vec2 vUv; varying vec3 vW;
       float h(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5); }
       float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
         return mix(mix(h(i), h(i+vec2(1,0)), f.x), mix(h(i+vec2(0,1)), h(i+vec2(1,1)), f.x), f.y); }
@@ -23,8 +31,13 @@ function crimsonPool(w: number, d: number): Mesh {
         vec2 p = vW.xz * 0.35;
         float r = n(p + uTime * 0.08) * 0.6 + n(p * 2.3 - uTime * 0.12) * 0.4;
         float ripple = sin(length(vW.xz - vec2(12.0, -222.0)) * 1.4 - uTime * 1.6) * 0.5 + 0.5;
-        vec3 c = mix(vec3(0.25, 0.01, 0.01), vec3(1.1, 0.12, 0.05), r * 0.8 + ripple * 0.15);
+        // dark cinnabar with slow glowing veins (not lava: mostly deep red-black)
+        float veins = smoothstep(0.62, 0.9, r) * (0.6 + ripple * 0.4);
+        vec3 c = mix(vec3(0.07, 0.004, 0.006), vec3(0.28, 0.02, 0.02), r);
+        c += vec3(1.3, 0.16, 0.06) * veins * 0.55;
+        c += vec3(0.5, 0.05, 0.02) * pow(ripple, 8.0) * 0.25;
         gl_FragColor = vec4(c, 1.0);
+        #include <fog_fragment>
       }`,
     side: DoubleSide,
   });

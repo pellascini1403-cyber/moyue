@@ -355,6 +355,17 @@ export class CenserWarden extends Enemy {
     const vw = this.view;
     if (!vw) return;
     const hs = Math.hypot(this.body.velocity.x, this.body.velocity.z);
+    if (this.dormant) {
+      // kneeling in prayer, the censer resting on the flagstones
+      vw.body.position.y = damp(vw.body.position.y, 0.55 + Math.sin(t * 0.8) * 0.02, 4, dt);
+      vw.body.rotation.x = damp(vw.body.rotation.x, 0.45, 4, dt);
+      vw.eyes.color.setRGB(0.6, 0.2, 0.08);
+      this.censer.set(this.position.x + Math.sin(this.facing) * 1.4, this.position.y + 0.35, this.position.z + Math.cos(this.facing) * 1.4);
+      vw.censer.position.copy(this.censer);
+      const hand = new Vector3(-0.9, 0.6, 0.7).applyAxisAngle(new Vector3(0, 1, 0), this.facing).add(this.root.position);
+      updateChain(vw, hand, this.censer.clone().add(new Vector3(0, 0.3, 0)));
+      return;
+    }
     vw.body.position.y = 1.0 + Math.abs(Math.sin(t * 4 * Math.min(1, hs))) * 0.05;
     const wind = this.state.endsWith('Wind') ? 1 : 0;
     vw.body.rotation.x = damp(vw.body.rotation.x, this.state === 'charge' ? 0.4 : wind * -0.15, 8, dt);
@@ -661,6 +672,16 @@ export class TollingAbbot extends Enemy {
     if (!vw) return;
     const wind = this.state.endsWith('Wind');
     const hs = Math.hypot(this.body.velocity.x, this.body.velocity.z);
+    if (this.dormant) {
+      // seated vigil beside the great bell; the bell hums faintly
+      vw.body.position.y = damp(vw.body.position.y, 0.9 + Math.sin(t * 0.6) * 0.03, 4, dt);
+      vw.body.rotation.x = damp(vw.body.rotation.x, 0.3, 4, dt);
+      vw.head.rotation.x = 0.35;
+      vw.eyes.color.setRGB(0.7, 0.2, 0.08);
+      vw.bell.rotation.z = Math.sin(t * 0.9) * 0.04;
+      return;
+    }
+    vw.head.rotation.x = 0;
     vw.body.position.y = 1.6 + Math.abs(Math.sin(t * 3.5 * Math.min(1, hs / 2))) * 0.08;
     // bell: on the back; raised during toll
     const tolling = this.state === 'toll' || this.state === 'tollWind';

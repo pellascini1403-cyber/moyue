@@ -56,6 +56,9 @@ export abstract class Enemy extends Entity implements Damageable {
   arenaId: string | null = null;
   spawnedByArena = false;
   inactive = false;
+  /** Bosses wait, visible and still, until their arena begins. */
+  dormant = false;
+  startsDormant = false;
 
   constructor(game: Game, id: string, regionId: string, public kind: EnemyKind, public stats: EnemyStats, pos: Vector3, yaw = 0) {
     super(game, id, regionId, new Group());
@@ -100,7 +103,7 @@ export abstract class Enemy extends Entity implements Damageable {
   }
 
   canBeHit(): boolean {
-    return this.alive && !this.dead && !this.inactive;
+    return this.alive && !this.dead && !this.inactive && !this.dormant;
   }
 
   hurtboxes(): Hurtbox[] {
@@ -236,6 +239,11 @@ export abstract class Enemy extends Entity implements Damageable {
       return;
     }
     if (this.inactive) return;
+    if (this.dormant) {
+      this.body.velocity.set(0, Math.min(0, this.body.velocity.y), 0);
+      this.integrate(dt);
+      return;
+    }
     this.staggerT = Math.max(0, this.staggerT - dt);
     if (this.staggerT <= 0) this.think(dt);
     else {
@@ -338,6 +346,7 @@ export abstract class Enemy extends Entity implements Damageable {
     this.facing = this.homeYaw;
     this.model.scale.setScalar(1);
     this.model.position.y = 0;
+    this.dormant = this.startsDormant;
     this.onReset();
   }
 

@@ -3,6 +3,7 @@ import { characterMaterial, glowSpriteMaterial } from '../materials';
 import { addOutlines, outlineMaterial, wingMaterial } from './charMaterials';
 import { latheG, taperTubeG } from '../geo/basic';
 import { lanternTexture } from '../textures';
+import { mergeRigParts } from './merge';
 
 function part(g: THREE_Geo, m: THREE_Mat, outline = true): Mesh {
   const me = new Mesh(g, m);
@@ -76,6 +77,7 @@ export function buildWeng(): NpcView {
   glow.position.copy(lamp.position);
   glow.scale.setScalar(2);
   pole.add(glow);
+  mergeRigParts(root);
   addOutlines(root, outlineMaterial(0.012));
   return { root, head, body, extra: [lamp, pole] };
 }
@@ -121,6 +123,7 @@ export function buildXun(): NpcView {
     leg.position.set(s * 0.15, 0.12, 0.05);
     body.add(leg);
   }
+  mergeRigParts(root);
   addOutlines(root, outlineMaterial(0.012));
   return { root, head, body, extra: [pack] };
 }
