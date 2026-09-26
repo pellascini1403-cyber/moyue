@@ -25,6 +25,7 @@ npm install
 npm run dev        # http://localhost:5173 (also on your LAN: open it on a phone)
 npm run build      # production build in dist/
 npm run preview    # serve the build
+node scripts/build-single.mjs   # after a build: one self-contained HTML file in dist-single/
 ```
 
 Open the dev URL on a phone on the same network, turn it sideways, and tap
