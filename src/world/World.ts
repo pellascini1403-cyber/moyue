@@ -21,13 +21,20 @@ export interface BuiltRegion {
   triangles: number;
   meshes: number;
   viewBounds: Box3;
+  /** Wrappers around live entity roots, hidden when far from the camera. */
+  holders: Group[];
 }
+
+/** Entities (creatures, shrines, pickups…) further than this from the camera are not drawn. */
+const ENTITY_DRAW_DISTANCE = 72;
 
 const _c = new Color();
 
 /** Owns every region: builds them, streams visibility and blends atmosphere. */
 export class World {
   readonly regions: BuiltRegion[] = [];
+  /** Scales region/entity draw distances (lower on low graphics quality). */
+  viewScale = 1;
   current: BuiltRegion | null = null;
   readonly hemi: HemisphereLight;
   readonly key: DirectionalLight;
@@ -70,7 +77,7 @@ export class World {
       const def = defs[i];
       onProgress?.(i / defs.length, def.name);
       await new Promise((r) => setTimeout(r, 0));
-      const ctx = new BuildContext(this.physics, def.seed, def.id);
+      const ctx = new BuildContext(this.physics, def.seed, def.id, def.always ? 170 : 48);
       const content = def.build(ctx);
       const group = new Group();
       group.name = `region:${def.id}`;
@@ -91,7 +98,7 @@ export class World {
       const vb = def.bounds.clone().expandByScalar(160);
       this.regions.push({
         def, group, content, lights: ctx.lights, animated: ctx.animated, particles,
-        triangles: stats.triangles, meshes: stats.meshes, viewBounds: vb,
+        triangles: stats.triangles, meshes: stats.meshes, viewBounds: vb, holders: [],
       });
     }
     onProgress?.(1, 'ready');
@@ -175,9 +182,17 @@ export class World {
     this.key.position.copy(player).addScaledVector(this.keyDir, 60);
     this.key.target.position.copy(player);
     for (const reg of this.regions) {
-      const vis = reg.def.always || reg.viewBounds.containsPoint(cam) || reg === r;
+      // regions further than the fog lets you see are not drawn at all
+      const vis =
+        reg.def.always ||
+        reg === r ||
+        reg.def.bounds.distanceToPoint(cam) < (reg.def.viewDistance ?? 95) * this.viewScale ||
+        (reg.def.viewFrom?.some((b) => b.containsPoint(cam)) ?? false);
       reg.group.visible = vis;
-      if (vis) for (const a of reg.animated) a.update(t, dt);
+      if (vis) {
+        for (const a of reg.animated) a.update(t, dt);
+        this.cullEntities(reg, cam);
+      }
       for (const p of reg.particles) {
         p.visibleTarget = reg === r ? 1 : 0;
         p.update(t, dt, cam, pixelRatio);
@@ -199,6 +214,29 @@ export class World {
 
   addToRegion(regionId: string, o: Object3D): void {
     const r = this.byId(regionId);
-    (r ? r.group : this.scene).add(o);
+    if (!r) {
+      this.scene.add(o);
+      return;
+    }
+    // a holder lets distance culling hide the entity without touching its own visibility
+    const holder = new Group();
+    holder.add(o);
+    r.group.add(holder);
+    r.holders.push(holder);
+  }
+
+  private cullEntities(reg: BuiltRegion, cam: Vector3): void {
+    const d = ENTITY_DRAW_DISTANCE * this.viewScale;
+    const d2 = d * d;
+    for (let i = reg.holders.length - 1; i >= 0; i--) {
+      const h = reg.holders[i];
+      const o = h.children[0];
+      if (!o) {
+        h.removeFromParent();
+        reg.holders.splice(i, 1);
+        continue;
+      }
+      h.visible = o.position.distanceToSquared(cam) < d2;
+    }
   }
 }

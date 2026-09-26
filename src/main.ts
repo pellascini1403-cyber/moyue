@@ -25,6 +25,7 @@ async function boot(): Promise<void> {
   if (q && ['low', 'medium', 'high', 'auto'].includes(q)) {
     game.renderer.setQuality(q);
     game.world.lightPool.setCount(game.renderer.profile.lights);
+    game.world.viewScale = game.renderer.profile.viewScale;
     game.onResize();
   }
   await game.load((p, label) => {

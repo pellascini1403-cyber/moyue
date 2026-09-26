@@ -58,6 +58,9 @@ export const Sanctum: RegionDef = {
   hanzi: T.hanzi,
   subtitle: T.subtitle,
   bounds: box3(-42, -12, -244, 34, 30, -186),
+  // sunk deep below the cloister: only drawn when close, or when looking down the Descent Well
+  viewDistance: 30,
+  viewFrom: [box3(-42, 14, -206, -26, 90, -189)],
   killY: -30,
   seed: 404,
   atmosphere: {

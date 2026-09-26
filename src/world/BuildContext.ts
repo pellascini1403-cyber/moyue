@@ -28,7 +28,7 @@ export interface Animated {
 
 /** Everything a region build step produces. */
 export class BuildContext {
-  readonly batch = new Batcher();
+  readonly batch: Batcher;
   readonly colliders: Collider[] = [];
   readonly lights: LightAnchor[] = [];
   readonly glows: GlowSpec[] = [];
@@ -36,8 +36,9 @@ export class BuildContext {
   readonly group = new Group();
   readonly rng: Rng;
 
-  constructor(public physics: PhysicsWorld, seed: number, public regionId: string) {
+  constructor(public physics: PhysicsWorld, seed: number, public regionId: string, cellSize = 48) {
     this.rng = new Rng(seed);
+    this.batch = new Batcher(cellSize);
   }
 
   addCollider(c: Collider): Collider {

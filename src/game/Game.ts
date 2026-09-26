@@ -147,6 +147,7 @@ export class Game implements MenuHost {
     this.renderer.setQuality(this.settings.quality);
     this.cam = new CameraRig(window.innerWidth / window.innerHeight);
     this.world = new World(this.scene, this.physics, this.renderer);
+    this.world.viewScale = this.renderer.profile.viewScale;
     this.fx = new Effects(this.scene);
     this.ui = h('div', { id: 'moyue-ui' });
     container.appendChild(this.ui);
@@ -189,6 +190,7 @@ export class Game implements MenuHost {
       this.world.lightPool.setCount(this.renderer.profile.lights);
       this.onResize();
     }
+    this.world.viewScale = this.renderer.profile.viewScale;
     this.audio.setVolumes(s.masterVolume, s.musicVolume, s.sfxVolume, s.ambienceVolume);
     saveSettings(s);
   }

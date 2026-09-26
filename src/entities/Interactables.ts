@@ -13,6 +13,7 @@ import { urnGeometry } from '../art/geo/props';
 import { thornLotusGeometry } from '../art/geo/nature';
 import { AbilityId, AbilityInfo } from '../player/Abilities';
 import { Env } from '../core/env';
+import { mergeRigParts } from '../art/characters/merge';
 import { hashString } from '../core/rng';
 import { damp } from '../core/math';
 
@@ -135,6 +136,7 @@ export class AbilityAltar extends Entity {
       top.position.y = 0.95;
       this.pedestal.add(top);
       this.pedestal.position.copy(pos);
+      mergeRigParts(this.pedestal);
       this.root.add(this.pedestal);
       this.relic = buildRelic(ability === 'bellStrike' ? new Color(1.6, 1.2, 0.6) : new Color(0.9, 1.5, 1.3));
       this.relic.root.position.set(pos.x, pos.y + 1.9, pos.z);
@@ -399,6 +401,7 @@ export class Gate extends Entity {
           this.mesh.add(tal);
         }
       }
+      if (kind === 'portcullis') mergeRigParts(this.mesh);
       this.mesh.position.set(pos.x, this.closedY, pos.z);
       this.mesh.rotation.y = yaw;
       this.root.add(this.mesh);
@@ -524,6 +527,7 @@ export class BreakWall extends Entity implements Damageable {
         c.rotation.set(0, floor ? i * 0.7 : 0, floor ? 0 : (i - 2) * 0.35);
         this.mesh.add(c);
       }
+      mergeRigParts(this.mesh);
       game.world.addToRegion(region, this.root);
     }
   }

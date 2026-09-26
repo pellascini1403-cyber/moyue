@@ -21,7 +21,6 @@ const WORLD_UV: Partial<Record<WorldMatKey, number>> = {
   plaster: 3, carved: 2.4, moss: 3, gold: 0, bronze: 0, jade: 0, crimson: 0, ink: 0, bone: 0,
 };
 
-const CELL = 48;
 const _n = new Vector3();
 const _p = new Vector3();
 const _c = new Color();
@@ -31,6 +30,8 @@ const _c = new Color();
  * large meshes – keeps draw calls low on mobile while preserving frustum culling.
  */
 export class Batcher {
+  /** Spatial cell size for splitting merged meshes (frustum culling granularity). */
+  constructor(private cell = 48) {}
   private parts = new Map<string, { key: WorldMatKey; geos: BufferGeometry[]; shadow: boolean }>();
   private seed = 1;
 
@@ -98,6 +99,7 @@ export class Batcher {
 
     g.computeBoundingBox();
     const bb = g.boundingBox!;
+    const CELL = this.cell;
     const cx = Math.floor((bb.min.x + bb.max.x) / 2 / CELL);
     const cz = Math.floor((bb.min.z + bb.max.z) / 2 / CELL);
     const cy = Math.floor((bb.min.y + bb.max.y) / 2 / CELL);

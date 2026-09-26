@@ -67,6 +67,10 @@ export interface RegionDef {
   killY: number;
   atmosphere: Atmosphere;
   seed: number;
+  /** Max camera distance (to bounds) at which this region is drawn. Default 95 m. */
+  viewDistance?: number;
+  /** Extra camera volumes from which the region is always drawn (e.g. a shaft looking down into it). */
+  viewFrom?: Box3[];
   /** Always-visible scenery (the great cavern shell); never the "current" region. */
   always?: boolean;
   build(ctx: BuildContext): RegionContent;

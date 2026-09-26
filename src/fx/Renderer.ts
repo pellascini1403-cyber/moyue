@@ -37,12 +37,14 @@ interface QualityProfile {
   lights: number;
   particles: number;
   hdr: boolean;
+  /** Multiplier on region and entity draw distances. */
+  viewScale: number;
 }
 
 const PROFILES: Record<Exclude<Quality, 'auto'>, QualityProfile> = {
-  low: { maxPixelRatio: 1, bloom: false, bloomLevels: 0, shadows: false, lights: 3, particles: 0.45, hdr: false },
-  medium: { maxPixelRatio: 1.5, bloom: true, bloomLevels: 1, shadows: false, lights: 5, particles: 0.75, hdr: true },
-  high: { maxPixelRatio: 2, bloom: true, bloomLevels: 2, shadows: true, lights: 7, particles: 1, hdr: true },
+  low: { maxPixelRatio: 1, bloom: false, bloomLevels: 0, shadows: false, lights: 3, particles: 0.45, hdr: false, viewScale: 0.72 },
+  medium: { maxPixelRatio: 1.5, bloom: true, bloomLevels: 1, shadows: false, lights: 5, particles: 0.75, hdr: true, viewScale: 1 },
+  high: { maxPixelRatio: 2, bloom: true, bloomLevels: 2, shadows: true, lights: 7, particles: 1, hdr: true, viewScale: 1.15 },
 };
 
 /**

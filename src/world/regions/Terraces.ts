@@ -27,6 +27,7 @@ export const Terraces: RegionDef = {
   bounds: box3(-22, 50, -126, 70, 100, -79),
   killY: 44,
   seed: 202,
+  viewDistance: 140, // the Great Pagoda is a landmark seen from the Threshold overlook
   atmosphere: {
     background: 0x070a14,
     fogColor: 0x101a30,

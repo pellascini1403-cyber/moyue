@@ -14,7 +14,7 @@ export function mergeRigParts(root: Object3D): number {
       const m = child as Mesh;
       if (!m.isMesh || m.children.length > 0 || Array.isArray(m.material)) continue;
       if (m.userData.noMerge || m.renderOrder !== 0) continue;
-      const key = `${(m.material as Material).uuid}|${m.userData.outline ? 1 : 0}|${m.castShadow ? 1 : 0}`;
+      const key = `${(m.material as Material).uuid}|${m.castShadow ? 1 : 0}`;
       let arr = groups.get(key);
       if (!arr) groups.set(key, (arr = []));
       arr.push(m);
@@ -43,7 +43,7 @@ export function mergeRigParts(root: Object3D): number {
       const first = arr[0];
       const mesh = new Mesh(merged, first.material);
       mesh.castShadow = first.castShadow;
-      mesh.userData.outline = first.userData.outline;
+      mesh.userData.outline = arr.some((m) => m.userData.outline);
       mesh.name = `${first.name || 'part'}_merged`;
       for (const m of arr) node.remove(m);
       node.add(mesh);
