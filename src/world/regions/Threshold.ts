@@ -70,14 +70,14 @@ export const Threshold: RegionDef = {
     for (const x of [-4, -2, 2, 4]) W.box('jade', x, Y + 3.2, 5.45, 0.07, 5.5, 0.06, {});
     // the cracked cocoon on its dais
     W.box('stone', 0, Y + 0.2, 1.8, 3.2, 0.4, 4.2, { collide: { safe: true } });
-    W.box('gold', 0, Y + 0.42, 1.8, 3.3, 0.06, 4.3, {});
+    W.box('gold', 0, Y + 0.34, 1.8, 3.3, 0.06, 4.3, {}); // a thin gilt band around the dais edge
     // two halves of the split jade cocoon lying open on the dais
     const shell = latheG([[0.01, 0], [0.45, 0.12], [0.62, 0.55], [0.58, 1.05], [0.32, 1.4], [0.04, 1.5]], 14, 0, Math.PI);
     W.add('jade', shell, -0.75, Y + 0.44, 2.4, 0, 0.2, 1.45, 0.75, 0.75, 0.75);
     W.add('jade', shell, 0.8, Y + 0.44, 2.6, 0, 0.2 + Math.PI, -1.45, 0.72, 0.72, 0.72);
     W.add('jade', sphereG(10), 0.2, Y + 0.45, 3.5, 0, 0, 0, 0.35, 0.12, 0.3);
-    W.light(0, Y + 1.5, 2, 0x58f0b8, 3.5, 9, 0.03);
-    W.glow(0, Y + 1.0, 2.2, 0x40d8a0, 3.5, 0.03);
+    W.light(0, Y + 2.3, 2.4, 0x62d6c4, 1.7, 9, 0.03);
+    W.glow(0, Y + 1.0, 2.2, 0x3cc0a0, 2.4, 0.03);
     glowMushrooms(W, -4.6, Y, 4.6, 7, 11, 0.8);
     glowMushrooms(W, 4.6, Y, -4.2, 5, 12, 0.7, false);
     reeds(W, 4.2, Y, 4.2, 0.8, 10, 13, 0.6);

@@ -1053,6 +1053,11 @@ export class Game implements MenuHost {
         continue;
       }
       if (this.player.dead) continue;
+      // the arena is sealed, so this only happens on a teleport/debug spawn: abandon the fight
+      if (a.box.distanceToPoint(pp) > 30) {
+        this.endArena(a, false);
+        continue;
+      }
       const alive = a.enemies.filter((e) => !e.dead);
       if (alive.length === 0) {
         a.wave++;
