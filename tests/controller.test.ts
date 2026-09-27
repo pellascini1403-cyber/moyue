@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { Vector3 } from 'three';
 import { PlayerController } from '../src/player/PlayerController';
-import { PlayerTuning } from '../src/player/PlayerTuning';
-import { allAbilities } from '../src/player/Abilities';
+import { PlayerTuning, gravityFor } from '../src/player/PlayerTuning';
+import { allAbilities, noAbilities } from '../src/player/Abilities';
 import { DT, box, floorWorld, run, settle } from './helpers';
 import { PhysicsWorld } from '../src/physics/PhysicsWorld';
 
@@ -94,6 +94,23 @@ describe('jumping', () => {
     // apex hang makes it slightly higher than nominal
     expect(maxY).toBeGreaterThan(PlayerTuning.jumpHeight * 0.95);
     expect(maxY).toBeLessThan(PlayerTuning.jumpHeight * 1.25);
+    // clearly higher than the original 2.55 m jump (which peaked at ≈ 2.5 m)
+    expect(maxY).toBeGreaterThan(3.1);
+  });
+
+  it('the higher jump keeps the original gravity (it does not feel heavier or faster)', () => {
+    const pc = new PlayerController();
+    const g0 = gravityFor(2.55, 0.36);
+    expect(Math.abs(pc.gravity - g0) / g0).toBeLessThan(0.01);
+  });
+
+  it('a quick tap still gives a useful hop', () => {
+    const w = floorWorld();
+    const pc = spawn(w);
+    let maxY = 0;
+    run(pc, w, 60, (f) => ({ jumpPressed: f === 0, jumpHeld: f < 1 }), () => (maxY = Math.max(maxY, pc.position.y)));
+    expect(maxY).toBeGreaterThan(1.2);
+    expect(maxY).toBeLessThan(1.8);
   });
 
   it('tap jump is much lower than held jump (variable height)', () => {
@@ -158,26 +175,109 @@ describe('jumping', () => {
     }, () => {
       if (jumped && landX === 0 && pc.position.y <= 0 && pc.velocity.y < 0) landX = pc.position.x;
     });
-    expect(landX - takeoffX).toBeGreaterThan(4.0);
+    expect(landX - takeoffX).toBeGreaterThan(5.3);
+  });
+});
+
+describe('forward dash', () => {
+  /** Distance covered by one dash from standing, facing +x. */
+  function dashDistance(ab = noAbilities()): { d: number; pc: PlayerController } {
+    const w = floorWorld();
+    const pc = spawn(w);
+    pc.abilities = ab;
+    pc.facing = Math.PI / 2;
+    const x0 = pc.position.x;
+    run(pc, w, 20, (f) => ({ dashPressed: f === 0 }));
+    return { d: pc.position.x - x0, pc };
+  }
+
+  it('is available from the start and goes forward ≈ 4.3 m', () => {
+    const { d, pc } = dashDistance();
+    expect(d).toBeGreaterThan(4.0);
+    expect(d).toBeLessThan(5.0);
+    expect(Math.abs(pc.position.z)).toBeLessThan(1e-3);
+  });
+
+  it('once per airtime, and it holds its height while it lasts', () => {
+    const w = floorWorld();
+    const pc = spawn(w);
+    let dashes = 0;
+    pc.hooks.onDash = () => dashes++;
+    const ys: number[] = [];
+    run(pc, w, 70, (f) => ({ moveX: 1, jumpPressed: f === 0, jumpHeld: true, dashPressed: f === 20 || f === 32 || f === 44 }), () => {
+      if (pc.state === 'dash') ys.push(pc.position.y);
+    });
+    expect(dashes).toBe(1);
+    expect(Math.max(...ys) - Math.min(...ys)).toBeLessThan(0.01);
+  });
+
+  it('Cloud Step makes it longer and untouchable', () => {
+    const base = dashDistance().d;
+    const { d, pc } = dashDistance({ ...noAbilities(), dash: true });
+    expect(d).toBeGreaterThan(base + 0.7);
+    // invulnerable during a Cloud Step dash, not during a plain one
+    const w = floorWorld();
+    const p1 = spawn(w);
+    run(p1, w, 3, (f) => ({ dashPressed: f === 0 }));
+    expect(p1.invulnerable).toBe(false);
+    const p2 = spawn(w);
+    p2.abilities = { ...noAbilities(), dash: true };
+    run(p2, w, 3, (f) => ({ dashPressed: f === 0 }));
+    expect(p2.invulnerable).toBe(true);
+    void pc;
+  });
+
+  it('stops at walls: no tunnelling through a thin wall', () => {
+    const w = floorWorld();
+    box(w, 1.5, 1, 0, 0.08, 1, 3); // 16 cm thick wall at x = 1.5
+    const pc = spawn(w);
+    pc.facing = Math.PI / 2;
+    run(pc, w, 20, (f) => ({ dashPressed: f === 0, moveX: 1 }));
+    expect(pc.position.x).toBeLessThan(1.5 - 0.08 - PlayerTuning.radius + 0.02);
+  });
+
+  it('dashing off a ledge carries on, then falls; the air dash is still there', () => {
+    const w = new PhysicsWorld();
+    box(w, -5, -0.5, 0, 5, 0.5, 3); // ledge ends at x = 0
+    box(w, 20, -8.5, 0, 30, 0.5, 30); // floor 8 m below
+    const pc = spawn(w, -1.5);
+    pc.facing = Math.PI / 2;
+    let dashes = 0;
+    pc.hooks.onDash = () => dashes++;
+    let offX = 0, minY = 0;
+    run(pc, w, 12, (f) => ({ moveX: 1, dashPressed: f === 0 }), () => {
+      if (pc.state === 'dash' && !pc.grounded) {
+        offX = pc.position.x;
+        minY = Math.min(minY, pc.position.y);
+      }
+    });
+    expect(offX).toBeGreaterThan(2); // carried on past the edge…
+    expect(minY).toBeGreaterThan(-0.01); // …level while dashing
+    run(pc, w, 40, (f) => ({ moveX: 1, dashPressed: f === 26 })); // after the 0.4 s cooldown
+    expect(pc.position.y).toBeLessThan(-0.5); // then fell
+    expect(dashes).toBe(2); // and the air dash was still available
+  });
+
+  it('jump + air dash crosses a 7 m gap that a jump alone cannot', () => {
+    const cross = (dash: boolean) => {
+      const w = new PhysicsWorld();
+      box(w, -10, -0.5, 0, 10, 0.5, 3); // x ≤ 0
+      box(w, 17, -0.5, 0, 10, 0.5, 3); // x ≥ 7
+      const pc = spawn(w, -6);
+      let jumped = false;
+      run(pc, w, 150, (f) => {
+        const press = !jumped && pc.position.x > -0.3 && pc.grounded;
+        if (press) jumped = true;
+        return { moveX: 1, jumpPressed: press, jumpHeld: true, dashPressed: dash && jumped && !pc.grounded && pc.velocity.y < 1 && pc.state !== 'dash' };
+      });
+      return pc.position.y > -0.2 && pc.position.x > 7;
+    };
+    expect(cross(false)).toBe(false);
+    expect(cross(true)).toBe(true);
   });
 });
 
 describe('abilities', () => {
-  it('dash covers ~3.5 m and air dash is limited to one per airtime', () => {
-    const w = floorWorld();
-    const pc = spawn(w);
-    pc.abilities = allAbilities();
-    const x0 = pc.position.x;
-    run(pc, w, 12, (f) => ({ dashPressed: f === 0 }));
-    const d = pc.position.x - x0;
-    expect(Math.abs(d) + Math.abs(pc.position.z)).toBeGreaterThan(3.0);
-    let dashes = 0;
-    pc.hooks.onDash = () => dashes++;
-    // jump, then try to dash three times in the air
-    run(pc, w, 50, (f) => ({ jumpPressed: f === 0, jumpHeld: true, dashPressed: f === 8 || f === 25 || f === 40 }));
-    expect(dashes).toBe(1);
-  });
-
   it('double jump adds height', () => {
     const w = floorWorld();
     const pc = spawn(w);

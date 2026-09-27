@@ -164,6 +164,7 @@ export class World {
       if (t.lift) g.lift.lerp(_c.setRGB(...t.lift), k);
       if (t.gain) g.gain.lerp(_c.setRGB(...t.gain), k);
       if (t.saturation !== undefined) g.saturation += (t.saturation - g.saturation) * k;
+      if (t.warmth !== undefined) g.warmth += (t.warmth - g.warmth) * k;
       if (t.vignette !== undefined) g.vignette += (t.vignette - g.vignette) * k;
       if (t.bloomStrength !== undefined) g.bloomStrength += (t.bloomStrength - g.bloomStrength) * k;
       if (t.bloomThreshold !== undefined) g.bloomThreshold += (t.bloomThreshold - g.bloomThreshold) * k;

@@ -11,6 +11,8 @@ export interface GradeParams {
   lift: Color;
   gain: Color;
   saturation: number;
+  /** 0..1: tone toward a luminance-preserving gold (warms without the olive cast of a plain blue cut). */
+  warmth: number;
   vignette: number;
   bloomStrength: number;
   bloomThreshold: number;
@@ -22,6 +24,7 @@ export function defaultGrade(): GradeParams {
     lift: new Color(0.0, 0.004, 0.012),
     gain: new Color(1, 1, 1),
     saturation: 1.0,
+    warmth: 0,
     vignette: 0.45,
     bloomStrength: 0.85,
     bloomThreshold: 0.82,
@@ -135,6 +138,7 @@ export class Renderer {
         uLift: { value: new Vector3() },
         uGain: { value: new Vector3(1, 1, 1) },
         uSat: { value: 1 },
+        uWarmth: { value: 0 },
         uVignette: { value: 0.4 },
         uExposure: { value: 1 },
         uTime: { value: 0 },
@@ -146,7 +150,7 @@ export class Renderer {
       vertexShader: FS_VERT,
       fragmentShader: `
         uniform sampler2D tScene; uniform sampler2D tBloom1; uniform sampler2D tBloom2;
-        uniform float uBloom; uniform float uBloomLevels; uniform vec3 uLift; uniform vec3 uGain; uniform float uSat;
+        uniform float uBloom; uniform float uBloomLevels; uniform vec3 uLift; uniform vec3 uGain; uniform float uSat; uniform float uWarmth;
         uniform float uVignette; uniform float uExposure; uniform float uTime; uniform float uFlash; uniform float uDamage;
         uniform float uFade; uniform float uAspect;
         varying vec2 vUv;
@@ -165,6 +169,7 @@ export class Renderer {
           // grade
           float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
           c = mix(vec3(l), c, uSat * (1.0 - uDamage * 0.6));
+          c = mix(c, l * vec3(1.18, 0.96, 0.66), uWarmth);
           c = c * uGain + uLift * (1.0 - c);
           // vignette
           vec2 q = vUv - 0.5; q.x *= uAspect;
@@ -302,6 +307,7 @@ export class Renderer {
     u.uLift.value.set(g.lift.r, g.lift.g, g.lift.b);
     u.uGain.value.set(g.gain.r, g.gain.g, g.gain.b);
     u.uSat.value = g.saturation;
+    u.uWarmth.value = g.warmth;
     u.uVignette.value = g.vignette;
     u.uExposure.value = g.exposure;
     u.uTime.value = this.time % 100;

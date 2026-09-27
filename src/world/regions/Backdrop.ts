@@ -20,8 +20,8 @@ export const Backdrop: RegionDef = {
   seed: 11,
   always: true,
   atmosphere: {
-    background: 0x05070b, fogColor: 0x0b1220, fogDensity: 0.01, fogLow: 0x122030, fogHeight: 0, fogFalloff: 30, fogHeightDensity: 0.02,
-    hemiSky: 0x506a90, hemiGround: 0x140e12, hemiIntensity: 2, keyColor: 0x9fb8e0, keyIntensity: 1.5, keyDir: [0.3, 1, 0.2],
+    background: 0x0a0705, fogColor: 0x1a120b, fogDensity: 0.01, fogLow: 0x2e2216, fogHeight: 0, fogFalloff: 30, fogHeightDensity: 0.02,
+    hemiSky: 0x806c52, hemiGround: 0x1a1008, hemiIntensity: 2, keyColor: 0xecc898, keyIntensity: 1.5, keyDir: [0.3, 1, 0.2],
     particles: [], music: 'threshold', ambience: 'cave',
   },
   build(ctx) {
@@ -31,13 +31,13 @@ export const Backdrop: RegionDef = {
     cavernCeiling(ctx, -5, 200, -130, 175, 9, 70);
     // Distant ink-wash spires (parallax layers)
     inkBackdrop(ctx, -5, 0, -130, [
-      { radius: 165, height: 190, color: 0x121c2a, opacity: 0.85, seed: 3, y: 10, repeat: 4 },
-      { radius: 150, height: 150, color: 0x1a2a3c, opacity: 0.7, seed: 7, y: -10, repeat: 5 },
-      { radius: 135, height: 110, color: 0x22384c, opacity: 0.55, seed: 13, y: -30, spiky: false, repeat: 3 },
+      { radius: 165, height: 190, color: 0x1e160e, opacity: 0.85, seed: 3, y: 10, repeat: 4 },
+      { radius: 150, height: 150, color: 0x2a2016, opacity: 0.7, seed: 7, y: -10, repeat: 5 },
+      { radius: 135, height: 110, color: 0x3a2c1e, opacity: 0.55, seed: 13, y: -30, spiky: false, repeat: 3 },
     ]);
     // A pale shaft of the world above falling onto the great pagoda
-    lightShaft(ctx, 48, 190, -118, 26, 150, 0x9ec4ff, 0.14, 0.05);
-    lightShaft(ctx, -25, 170, -170, 16, 130, 0x8fd0d8, 0.1, -0.1);
+    lightShaft(ctx, 48, 190, -118, 26, 150, 0xffd8a0, 0.14, 0.05);
+    lightShaft(ctx, -25, 170, -170, 16, 130, 0xf0d0a0, 0.1, -0.1);
     // Lantern chains strung across the void (seen from everywhere)
     const rng = new Rng(21);
     const chains: [Vector3, Vector3][] = [

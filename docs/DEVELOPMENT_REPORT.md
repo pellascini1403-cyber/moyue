@@ -45,9 +45,10 @@ Playwright 1.56.1, with software WebGL (SwiftShader).
   capsule character body with snap-to-ground, step-up, slopes, sliding off roofs
   that cannot be walked on, and carrying on moving platforms. The last safe
   ground position is recorded for hazard respawns.
-* Run (7.4 m/s), variable-height jump, coyote time (0.10 s), jump buffer
-  (0.13 s), fall gravity, apex hang, dash with an air limit and i-frames,
-  double jump, wall cling, wall slide and wall jump on carved or root surfaces
+* Run (7.4 m/s), variable-height jump (3.2 m held, about 1.5 m on a quick tap),
+  coyote time (0.10 s), jump buffer (0.13 s), fall gravity, apex hang, a
+  forward dash from the start (ground and once per airtime; Cloud Step makes it
+  longer and invulnerable), double jump, wall cling, wall slide and wall jump on carved or root surfaces
   only, and a heal channel.
 * A procedural animation rig with squash and stretch, and a verlet scarf.
 
@@ -79,8 +80,8 @@ Playwright 1.56.1, with software WebGL (SwiftShader).
   title cards.
 
 ### Rendering (src/fx)
-* A post chain of bright pass, blur pyramid, ACES tone mapping, grading,
-  vignette and grain. Height fog is patched into every material, including
+* A post chain of bright pass, blur pyramid, ACES tone mapping, grading
+  (lift, gain, saturation and a gold tone), vignette and grain. Height fog is patched into every material, including
   custom shaders.
 * Rim-lit character materials, ink outlines, instanced glows, a fixed-size
   light pool and GPU ambient particles.
@@ -137,16 +138,21 @@ Playwright 1.56.1, with software WebGL (SwiftShader).
 
 ## TESTED
 
-### Automated: unit and headless simulation (`npm test`, 59 tests, all passing)
-* **Controller (18 tests).** Idle without drift, acceleration and stopping,
-  25° ramps, step-up, walls, jump height, variable jump, coyote time, jump
-  buffer, running jump distance, dash distance and air-dash limit, double jump,
+### Automated: unit and headless simulation (`npm test`, 66 tests, all passing)
+* **Controller (25 tests).** Idle without drift, acceleration and stopping,
+  25° ramps, step-up, walls, jump height (above 3.1 m), unchanged gravity,
+  variable jump and the quick-tap hop, coyote time, jump buffer, running jump
+  distance (above 5.3 m). The forward dash: its distance with no abilities, one
+  per airtime and level while it lasts, Cloud Step longer and invulnerable, no
+  tunnelling through a 16 cm wall, carrying on off a ledge, and jump + dash
+  crossing a 7 m gap that a jump alone cannot. Also double jump,
   cling and wall jump on climbable walls only, platform carry, ramp crests,
   roof slide-off, and chimney climbing.
 * **Traversal (11 tests).** Each region's real collision geometry is built in
   Node, and an autopilot drives the real controller. The tests prove the
   critical path from tomb to ending, and prove that each gate is impassable
-  without its ability. They also cover the hidden-ledge fragment, the pagoda
+  without its ability. The Great Gap is too far for a jump alone and is
+  crossed with jump + the forward dash, with no abilities. They also cover the hidden-ledge fragment, the pagoda
   shortcut (no softlock), the lift, the thorn-pool pogo and the seal break.
 * **Combat (4 tests).** Hit volumes for the forward slash, the turned swing,
   the down slash and the spin.
@@ -158,7 +164,7 @@ Playwright 1.56.1, with software WebGL (SwiftShader).
   effect scales with enemy size and is gone within about a second. The combat
   camera framing clears the protagonist's mask for an enemy 1.5 m ahead.
 
-### Automated: end-to-end in the browser (`npm run e2e`, 15 tests, all passing)
+### Automated: end-to-end in the browser (`npm run e2e`, 18 tests, all passing)
 * The title screen boots with no console errors.
 * A new game plays the opening, and the keyboard moves the player.
 * After the full opening with no input, the scripted camera hands control back
@@ -171,6 +177,11 @@ Playwright 1.56.1, with software WebGL (SwiftShader).
 * On a touch device, the first hints use touch wording. This test was also
   added for a bug found in this session.
 * The touch pause button pauses, and resume returns to play.
+* Movement in the real game, with no abilities:
+  - Space jumps more than 3 m, and K dashes more than 3.5 m.
+  - The touch DASH button is shown from the start and dashes.
+  - At the Great Gap a jump alone falls into the mist and respawns the player
+    on the near side, while jump + dash lands on the island and stays there.
 * Settings survive a reload. Resting at a shrine saves, and Continue restores
   the shrine, abilities and pickups. A corrupted save falls back to the backup.
 
@@ -302,6 +313,94 @@ unchanged.
 - The effect's cost on a real phone. It adds up to 96 instanced streaks in
   one draw call and one borrowed light.
 - Whether the combat pitch feels comfortable to a player.
+
+## Movement and colour pass
+
+The user asked for a higher jump, a forward dash for zones that need more
+distance, a check that previously unreachable zones can now be reached, and
+a warmer look. The protagonist model was not changed in this pass.
+
+**What was unreachable, and why.** A reachability audit covered every
+walkable surface in the four regions, using the real collision geometry and
+the real controller. It simulated each possible jump, with and without the
+dash and with dash, coyote-jump and air-dash combinations. With the old
+movement and no abilities:
+- All of the functional route through the Threshold and the Terraces was
+  reachable, although some jumps were tight. For example, the hidden-ledge
+  pillars rise 1.8 m, and a jump peaked at 2.46 m.
+- The first real block was **the Great Gap** (6.3 m). It needed the dash,
+  and the dash was only granted by the optional-looking three-wave Cloud Step
+  trial.
+- A quick tap on a touch screen jumped only 0.59 m.
+
+**IMPLEMENTED**
+- **Jump.** The jump is 3.3 m nominal, 3.19 m measured (previously 2.46 m).
+  The apex time grows with √height, so gravity is unchanged (39.3) and the
+  jump does not feel heavier or faster. A running jump covers 5.8 m
+  (previously 5.2 m). A quick tap still hops about 1.5 m (previously 0.59 m),
+  because releasing the button only cuts the rise after 0.07 s. Holding
+  still controls the height.
+- **Forward dash from the start.**
+  - It covers about 4 m at 24 m/s, in the stick direction or facing forward.
+  - It works on the ground and once per airtime. It holds its height while it
+    lasts, can be cancelled into a jump on the ground, and has a 0.4 s
+    cooldown.
+  - Jump + air dash covers about 9.5 m.
+  - The touch DASH button is now always shown. Hints were added on the broken
+    bridge (Threshold) and at the Great Gap.
+- **Cloud Step becomes an upgrade.** The trial now makes the dash longer
+  (about 5 m) and invulnerable throughout. Its text was updated. The trial is
+  still there, but it is no longer required to reach Mistfall.
+- **Physics fix in the dash.** Dashing off a ledge used to drag the character
+  17 cm down on the last ground frame, from an edge-contact normal. Normal
+  walking already ignored those normals, and the dash now does too.
+  Collisions during the dash are sub-stepped (0.15 m), so it cannot tunnel
+  through walls. There is a test for this.
+- **Warm lighting and grading** in all four regions and the shared backdrop.
+  Models and materials were not changed. What changed:
+  - fog and height-fog colours, background, hemisphere light and key light
+    (blue moonlight became warm gold);
+  - lift, gain and saturation, plus a new grading control, `warmth`, that
+    tones toward a luminance-preserving gold;
+  - mist sheets, waterfalls, the distant ink-wash spires, light shafts, and
+    dust, firefly and spore particles.
+
+  The Sanctum stays crimson, a little more amber. Jade accents such as the
+  glowing mushrooms were kept.
+
+**TESTED**
+- **Unit tests.** 7 new controller tests, and the traversal tests updated for
+  the Great Gap. All 66 pass.
+- **Reachability audit, before and after (no abilities, all dash
+  combinations).**
+  - Nothing that was reachable was lost.
+  - The Great Gap is crossed with jump + dash, and a jump alone still falls
+    short.
+  - The newly reachable spots are only small decorative tops: statues, a
+    gate and a shrine roof.
+  - The ability gates hold: the Hanging Stair (3.8 m ledges) still needs
+    Wing Unfurl; the chimney and the secret pillars need Cicada's Grip; the
+    Sanctum is reached only through the chimney and the well.
+  - The audit also found a **pre-existing** shortcut: from the Terraces temple
+    podium you can drop about 38 m onto the Mistfall island without damage.
+    It was left as it is (level design).
+- **E2E in the real game.** 3 new tests: jump and dash with the keyboard, the
+  touch DASH button, and the Great Gap (jump alone versus jump + dash). All
+  18 E2E tests pass.
+- **Browser captures.**
+  - Before/after views of all four regions, at high quality.
+  - The Great Gap crossing in slow motion.
+  - During the colour pass the character sometimes vanished from a capture.
+    This was the existing i-frame blink after an enemy hit (the HUD showed the
+    lost lanterns), not a regression.
+- **Autopilot fight.** 2 kills, no errors.
+
+**NOT YET TESTED**
+- How the new jump and dash feel in human hands, on a real phone.
+- The warm grading on a real phone screen. Captures come from software
+  WebGL.
+- Whether the easier early game (the Great Gap no longer needs the trial)
+  changes pacing in a full playthrough.
 
 ## NOT YET TESTED
 

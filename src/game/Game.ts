@@ -812,7 +812,7 @@ export class Game implements MenuHost {
       special,
       charge: c.charging ? Math.min(1, c.chargeT / c.tuning.chargeTime) : 0,
       lockVisible: true,
-      dash: ab.dash,
+      dash: true, // the forward dash is available from the start
     });
     if (!Env.touch || this.input.lastSource !== 'touch') {
       this.hud.prompt(label ? `${label}  [E]` : null);

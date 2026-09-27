@@ -69,6 +69,31 @@ test('touch: stick moves, jump button jumps, strike button attacks, simultaneous
   await ctx.close();
 });
 
+test('touch: the DASH button is there from the start and dashes forward', async ({ browser }) => {
+  const ctx = await browser.newContext({ ...devices['iPhone 13 landscape'], viewport: { width: 844, height: 390 } });
+  const page = await ctx.newPage();
+  await bootGame(page, 'quality=low&play=1&god=1');
+  await page.waitForFunction(() => (window as any).__MOYUE__.mode === 'play');
+  // a wide courtyard in the Terraces, facing east; no abilities
+  await page.evaluate(() => {
+    const g = (window as any).__MOYUE__;
+    const V = g.player.position.constructor;
+    g.spawnPlayer(new V(-4, 86.1, -100), Math.PI / 2);
+  });
+  await page.waitForTimeout(1500);
+  expect(await page.evaluate(() => (window as any).__MOYUE__.progress.abilities.dash)).toBe(false);
+  const r = await rects(page);
+  expect(r.dash?.visible).toBe(true);
+  const p0 = await playerPos(page);
+  const dashed = page.waitForFunction(() => (window as any).__MOYUE__.player.ctrl.state === 'dash', null, { timeout: 15_000 });
+  await touchTap(page, 2, r.dash.x, r.dash.y, 120);
+  await dashed;
+  await page.waitForFunction(() => (window as any).__MOYUE__.player.ctrl.state !== 'dash', null, { timeout: 30_000 });
+  const p1 = await playerPos(page);
+  expect(Math.hypot(p1[0] - p0[0], p1[2] - p0[2])).toBeGreaterThan(3.5);
+  await ctx.close();
+});
+
 test('touch devices get touch wording in hints before any input', async ({ browser }) => {
   const ctx = await browser.newContext({ ...devices['iPhone 13 landscape'], viewport: { width: 844, height: 390 } });
   const page = await ctx.newPage();

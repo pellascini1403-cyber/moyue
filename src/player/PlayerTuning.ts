@@ -14,12 +14,17 @@ export const PlayerTuning = {
   airDecel: 18,
   turnRate: 24, // model yaw rad/s
 
-  jumpHeight: 2.55,
-  timeToApex: 0.36,
+  // 3.3 m nominal (was 2.55; measured peaks 3.19 m, was 2.46 m). The apex time
+  // grows with √height so gravity stays the same: the jump goes higher and
+  // further (≈ 5.8 m at a run, was ≈ 5.2 m) without feeling heavier or faster.
+  jumpHeight: 3.3,
+  timeToApex: 0.41,
   fallGravityMul: 1.42,
   apexGravityMul: 0.6,
   apexThreshold: 2.2,
   jumpCutMul: 0.42,
+  /** Releasing jump only cuts the rise after this long, so a quick tap still hops ≈ 1.5 m. */
+  jumpMinTime: 0.07,
   maxFall: 24,
   coyoteTime: 0.1,
   jumpBuffer: 0.13,
@@ -27,11 +32,14 @@ export const PlayerTuning = {
 
   doubleJumpHeight: 2.15,
 
-  dashSpeed: 21,
-  dashTime: 0.17,
-  dashCooldown: 0.42,
-  dashIFrames: 0.12,
+  // Forward dash, available from the start: on the ground and once per airtime (≈ 4 m).
+  dashSpeed: 24,
+  dashTime: 0.18,
+  dashCooldown: 0.4,
   dashExitSpeedMul: 0.55,
+  // Cloud Step (the Terraces trial) turns the dash to mist: longer (≈ 5 m) and untouchable throughout.
+  cloudDashTime: 0.22,
+  dashIFrames: 0.22,
 
   wallSlideSpeed: 3.0,
   wallJumpUp: 12.8,

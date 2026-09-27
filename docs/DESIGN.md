@@ -25,7 +25,7 @@ pentatonic music).
 
 1. **Responsive, precise control** — no input is ever delayed by animation.
 2. **Scale** — a one-metre warrior in a cavern hundreds of metres across.
-3. **Light in darkness** — warm lanterns against cold stone and mist.
+3. **Light in darkness** — lanterns and golden haze against deep umber stone.
 4. **Exploration rewards curiosity** — hidden ledges, hollow walls, secrets behind falls.
 5. **Mobile first** — everything is playable with two thumbs.
 
@@ -57,9 +57,10 @@ Keyboard/mouse and gamepad are fully supported too (see README).
 | Parameter | Value |
 | --- | --- |
 | Run speed | 7.4 m/s, reached in < 0.1 s; stops in < 0.07 s |
-| Jump | 2.55 m (held), ~0.5 m (tap); apex 0.36 s; fall gravity ×1.42; apex hang while held |
+| Jump | 3.3 m nominal, 3.2 m measured (held), ≈ 1.5 m (quick tap: the cut applies only after 0.07 s); apex 0.41 s at the original gravity; running jump ≈ 5.8 m; fall gravity ×1.42; apex hang while held |
 | Coyote time / jump buffer | 0.10 s / 0.13 s |
-| Dash (Cloud Step) | 21 m/s × 0.17 s ≈ 3.6 m, 0.12 s invulnerability, 1 air dash per airtime, jump-cancel on ground |
+| Forward dash (from the start) | 24 m/s × 0.18 s ≈ 4 m in the stick or facing direction; on the ground and once per airtime; level in the air; jump-cancel on the ground; 0.4 s cooldown. Jump + air dash ≈ 9.5 m |
+| Cloud Step (upgrade) | the dash lasts 0.22 s (≈ 5 m) and is invulnerable throughout |
 | Double jump (Wing Unfurl) | 2.15 m |
 | Wall cling/jump (Cicada's Grip) | only on carved / root-covered surfaces; slide 3 m/s; jump 12.8 up + 8.6 out |
 | Melee | 3-hit spear chain (two sweeps and a lunging thrust, 0.30/0.30/0.40 s, reach 1.75/1.75/1.85 m), overhead air cut (1.7 m), automatic down-thrust (pogo) / up-sweep by soft aim |
@@ -74,9 +75,9 @@ Keyboard/mouse and gamepad are fully supported too (see README).
 ```
             Threshold (y≈100)        ← jade tomb, overlook, broken bridge, first shrine
                  │
-        Lantern Terraces (y 54–90)   ← Keeper Weng, Cloud Step trial (dash), Great Pagoda
+        Lantern Terraces (y 54–90)   ← Keeper Weng, Cloud Step trial (dash upgrade), Great Pagoda
                  │  (pagoda foot)
-        Mistfall Cloister (y 44–72)  ← Great Gap (dash), Censer Warden → Wing Unfurl,
+        Mistfall Cloister (y 44–72)  ← Great Gap (jump + dash), Censer Warden → Wing Unfurl,
                  │                     Hanging Stair (double jump) → Cicada's Grip,
                  │                     carved chimney (wall jump) → Wind Gate
                  │  Descent Well (a 56 m drop)
@@ -88,8 +89,8 @@ Keyboard/mouse and gamepad are fully supported too (see README).
 
 | Gate | Requires | Reward beyond |
 | --- | --- | --- |
-| Cloud Step trial (3 waves) | — | Cloud Step (dash) |
-| The Great Gap (6.3 m, mist-sea hazard 2 m below) | dash | Mistfall |
+| Cloud Step trial (3 waves, optional) | — | Cloud Step (longer, invulnerable dash) |
+| The Great Gap (6.3 m, mist-sea hazard 2 m below) | jump + forward dash (a jump alone falls short) | Mistfall |
 | Censer Warden (elite) | — | Wing Unfurl (double jump) |
 | Hanging Stair (3.8 m ledges) | double jump | Hermit's Terrace + Cicada's Grip |
 | Carved chimney (13 m) | wall cling | Wind Gate → Descent Well → Sanctum |
@@ -133,7 +134,7 @@ All audio is synthesised with WebAudio at runtime:
 
 ## Visual identity
 
-* Deep blue/ink darkness, warm red-amber lanterns, jade accents, crimson in forbidden places.
+* Warm dark: umber and bronze shadows, golden haze and moonlight, red-amber lanterns, a few jade accents, crimson in forbidden places. Per-region grading adds a luminance-preserving gold tone (`warmth`), which warms without the olive cast of simply cutting blue.
 * Custom height fog + distance fog per region; ink-wash spire backdrops; mist seas; light shafts; bioluminescence; ambient particles (dust, embers, fireflies, spores, ash).
 * HDR bloom, ACES tone mapping, per-region grading, vignette and grain.
 * Characters: procedural meshes, fresnel rim light and inverted-hull ink outlines for readability.

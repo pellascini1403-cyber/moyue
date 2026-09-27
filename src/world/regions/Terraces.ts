@@ -29,23 +29,23 @@ export const Terraces: RegionDef = {
   seed: 202,
   viewDistance: 140, // the Great Pagoda is a landmark seen from the Threshold overlook
   atmosphere: {
-    background: 0x070a14,
-    fogColor: 0x101a30,
+    background: 0x0c0806,
+    fogColor: 0x1e140c,
     fogDensity: 0.0095,
-    fogLow: 0x1e2c4c,
+    fogLow: 0x4c3420,
     fogHeight: 62,
     fogFalloff: 16,
     fogHeightDensity: 0.04,
-    hemiSky: 0x4a64a8,
+    hemiSky: 0x8a6c50,
     hemiGround: 0x2a1410,
     hemiIntensity: 2.2,
-    keyColor: 0x8fa8e8,
+    keyColor: 0xe8bc88,
     keyIntensity: 1.6,
     keyDir: [0.5, 1, 0.3],
-    grade: { lift: [0.01, 0.004, 0.02], gain: [1.04, 0.99, 0.98], saturation: 1.05, vignette: 0.48, bloomStrength: 1.0, bloomThreshold: 0.78, exposure: 1.05 },
+    grade: { lift: [0.02, 0.01, 0.0], gain: [1.06, 0.99, 0.9], saturation: 1.08, warmth: 0.22, vignette: 0.48, bloomStrength: 1.0, bloomThreshold: 0.78, exposure: 1.05 },
     particles: [
       { kind: 'embers', color: 0xffa050, count: 120, size: 0.06, extent: 16, speed: 1, opacity: 0.85 },
-      { kind: 'dust', color: 0xd0c0e0, count: 200, size: 0.045, extent: 14, speed: 1, opacity: 0.4 },
+      { kind: 'dust', color: 0xe0c8a0, count: 200, size: 0.045, extent: 14, speed: 1, opacity: 0.4 },
     ],
     music: 'terraces',
     ambience: 'terraces',
@@ -157,11 +157,11 @@ export const Terraces: RegionDef = {
     R.hint(38, t4, -104, 3, 'Carved stone… a clinging creature might climb it.', 'wallCling');
 
     // ------------------------------------------------------------ dressing
-    mistSheet(ctx, 30, 58, -104, 90, 60, 0x4a3a5a, 0.55);
-    mistSheet(ctx, 30, 49, -104, 120, 80, 0x2a2440, 0.85);
+    mistSheet(ctx, 30, 58, -104, 90, 60, 0x5a4232, 0.55);
+    mistSheet(ctx, 30, 49, -104, 120, 80, 0x33241a, 0.85);
     R.abyss(35, 47, -104, 45, 30, 6);
     sageStatue(ctx.place(68, 0, -140, -Math.PI / 4), 0, 42, 0, 3.6, { eyesGlow: true, collide: false, moss: true });
-    waterfall(ctx, 74, 110, -95, 6, 60, -Math.PI / 2);
+    waterfall(ctx, 74, 110, -95, 6, 60, -Math.PI / 2, 0xd8ccb4);
     for (let i = 0; i < 8; i++) stalactite(W, 10 + i * 8, 108 + (i % 3) * 3, -86 - (i % 4) * 9, 12 + (i % 3) * 6, 1.8, 200 + i);
     // lower terraces cascading into the mist (scenery)
     for (let i = 0; i < 4; i++) {

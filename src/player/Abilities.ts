@@ -1,5 +1,5 @@
 export interface Abilities {
-  /** Cloud Step — ground and air dash. */
+  /** Cloud Step — the forward dash (which everyone has) becomes longer and untouchable. */
   dash: boolean;
   /** Wing Unfurl — second jump in the air. */
   doubleJump: boolean;
@@ -27,8 +27,8 @@ export const AbilityInfo: Record<AbilityId, { name: string; hanzi: string; desc:
   dash: {
     name: 'Cloud Step',
     hanzi: '云步',
-    desc: 'Step through the air like drifting mist. A brief, untouchable burst of speed.',
-    how: 'Press DASH on the ground or once in mid-air.',
+    desc: 'Your dash turns to drifting mist: it carries you further, and nothing can touch you while it lasts.',
+    how: 'Press DASH on the ground or once in mid-air, as before.',
   },
   doubleJump: {
     name: 'Wing Unfurl',

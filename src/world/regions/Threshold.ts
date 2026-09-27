@@ -25,23 +25,23 @@ export const Threshold: RegionDef = {
   killY: 80,
   seed: 101,
   atmosphere: {
-    background: 0x05080e,
-    fogColor: 0x0c1626,
+    background: 0x0a0705,
+    fogColor: 0x1a120b,
     fogDensity: 0.0105,
-    fogLow: 0x2a3e56,
+    fogLow: 0x4a3622,
     fogHeight: 92,
     fogFalloff: 14,
     fogHeightDensity: 0.05,
-    hemiSky: 0x5a7eb0,
-    hemiGround: 0x1a1418,
+    hemiSky: 0x8a7458,
+    hemiGround: 0x22140c,
     hemiIntensity: 2.3,
-    keyColor: 0xa6c4f0,
+    keyColor: 0xf2d2a0,
     keyIntensity: 2.0,
     keyDir: [0.4, 1, 0.6],
-    grade: { lift: [0.0, 0.006, 0.02], gain: [0.98, 1.0, 1.04], saturation: 0.95, vignette: 0.5, bloomStrength: 0.9, bloomThreshold: 0.8, exposure: 1.05 },
+    grade: { lift: [0.018, 0.01, 0.002], gain: [1.05, 0.99, 0.92], saturation: 1.06, warmth: 0.28, vignette: 0.5, bloomStrength: 0.9, bloomThreshold: 0.8, exposure: 1.05 },
     particles: [
-      { kind: 'dust', color: 0xc0d4ea, count: 280, size: 0.05, extent: 14, speed: 1, opacity: 0.5 },
-      { kind: 'fireflies', color: 0x6ff0d8, count: 40, size: 0.09, extent: 18, speed: 1, opacity: 0.9 },
+      { kind: 'dust', color: 0xe8d0a8, count: 280, size: 0.05, extent: 14, speed: 1, opacity: 0.5 },
+      { kind: 'fireflies', color: 0xf2dc80, count: 40, size: 0.09, extent: 18, speed: 1, opacity: 0.9 },
     ],
     music: 'threshold',
     ambience: 'cave',
@@ -127,9 +127,10 @@ export const Threshold: RegionDef = {
       hangingLantern(W, -28 + s * 1.9, Y - 1.4 + 2.6, -15.2, 0.2, 0.5);
     }
     R.hint(-28, Y - 1.4, -18, 3, 'The bridge is broken. Keep your momentum and {jump}.');
+    R.hint(-28, Y - 1.4, -29.5, 2.6, '{dash} to dash forward — on the ground, or once in mid-air to carry a leap further.');
     // mist sea swallowing everything below the path
-    mistSheet(ctx, -20, Y - 11, -30, 120, 90, 0x3a5470, 0.75);
-    mistSheet(ctx, -20, Y - 16, -30, 140, 110, 0x2a3c54, 0.9);
+    mistSheet(ctx, -20, Y - 11, -30, 120, 90, 0x5a4630, 0.75);
+    mistSheet(ctx, -20, Y - 16, -30, 140, 110, 0x3a2c1e, 0.9);
     R.abyss(-24, Y - 13, -30, 42, 38, 6);
 
     // ------------------------------------------------------------ A5 · the plateau
@@ -182,8 +183,8 @@ export const Threshold: RegionDef = {
     // the distant Great Pagoda (belongs to the terraces; visible from the overlook)
     void pagoda;
     // waterfalls pouring from the cliffs to the east
-    waterfall(ctx, 22, 118, -30, 5, 50, -Math.PI / 2 + 0.3);
-    waterfall(ctx, -64, 112, -18, 4, 45, Math.PI / 2);
+    waterfall(ctx, 22, 118, -30, 5, 50, -Math.PI / 2 + 0.3, 0xd8ccb4);
+    waterfall(ctx, -64, 112, -18, 4, 45, Math.PI / 2, 0xd8ccb4);
     for (let i = 0; i < 6; i++) stalactite(W, -40 + i * 11, 125 + (i % 2) * 4, -20 - (i % 3) * 12, 14 + (i % 3) * 5, 2, 70 + i);
 
     return {

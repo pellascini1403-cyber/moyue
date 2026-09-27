@@ -86,12 +86,12 @@ describe('Region 3 — Mistfall Cloister', () => {
     { to: v3(27, 48, -124), jump: 'none', label: 'bridge start' },
     { to: v3(21.2, 50, -124), jump: 'none', tol: 0.5, label: 'edge of the Great Gap' },
   ];
-  it('the Great Gap cannot be crossed without Cloud Step', () => {
+  it('the Great Gap is too far for a jump alone', () => {
     const r = runRoute(sim, v3(30, 48.1, -124), [...toGap, { to: v3(8, 49.4, -124), label: 'jump the gap', tol: 1.5, timeout: 4 }], noAbilities(), 30);
     expect(r.ok).toBe(false);
   });
 
-  it('with Cloud Step: Great Gap → island → broken span → cloister', () => {
+  it('jump + the forward dash (no abilities): Great Gap → island → broken span → cloister', () => {
     const r = runRoute(sim, v3(30, 48.1, -124), [
       ...toGap,
       { to: v3(8, 49.4, -124), dash: true, label: 'dash across the gap', tol: 1.5 },
@@ -100,7 +100,7 @@ describe('Region 3 — Mistfall Cloister', () => {
       { to: v3(0, 48, -147.5), label: 'broken span', timeout: 12 },
       { to: v3(-5, 48, -148.4), jump: 'none', label: 'stair top' },
       { to: v3(-24, 44, -155), jump: 'none', label: 'cloister garden' },
-    ], withAb({ dash: true }), 30);
+    ], noAbilities(), 30);
     expect(r.ok, `failed at "${r.label}" at ${fmt(r.pos)}`).toBe(true);
   });
 

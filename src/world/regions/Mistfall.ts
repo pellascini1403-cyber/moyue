@@ -28,23 +28,23 @@ export const Mistfall: RegionDef = {
   killY: 5,
   seed: 303,
   atmosphere: {
-    background: 0x0a1418,
-    fogColor: 0x1c2e38,
+    background: 0x100c08,
+    fogColor: 0x2e2618,
     fogDensity: 0.016,
-    fogLow: 0x5a7680,
+    fogLow: 0x8a7452,
     fogHeight: 44,
     fogFalloff: 10,
     fogHeightDensity: 0.07,
-    hemiSky: 0x6a98a8,
-    hemiGround: 0x16201c,
+    hemiSky: 0xa09070,
+    hemiGround: 0x1e1a12,
     hemiIntensity: 2.4,
-    keyColor: 0xc0e0e8,
+    keyColor: 0xf4dcb0,
     keyIntensity: 1.8,
     keyDir: [-0.3, 1, 0.2],
-    grade: { lift: [0.01, 0.02, 0.025], gain: [0.96, 1.02, 1.02], saturation: 0.9, vignette: 0.42, bloomStrength: 0.8, bloomThreshold: 0.85, exposure: 1.08 },
+    grade: { lift: [0.018, 0.012, 0.004], gain: [1.05, 0.99, 0.92], saturation: 1.0, warmth: 0.26, vignette: 0.42, bloomStrength: 0.8, bloomThreshold: 0.85, exposure: 1.08 },
     particles: [
-      { kind: 'spores', color: 0x9ff0e0, count: 160, size: 0.06, extent: 16, speed: 1, opacity: 0.7 },
-      { kind: 'dust', color: 0xd8f0f0, count: 240, size: 0.05, extent: 14, speed: 1, opacity: 0.35 },
+      { kind: 'spores', color: 0xf0e0a0, count: 160, size: 0.06, extent: 16, speed: 1, opacity: 0.7 },
+      { kind: 'dust', color: 0xf0e4c8, count: 240, size: 0.05, extent: 14, speed: 1, opacity: 0.35 },
     ],
     music: 'mistfall',
     ambience: 'water',
@@ -57,15 +57,14 @@ export const Mistfall: RegionDef = {
     ledge(W, 30, 48, -124, 5, 5, { depth: 10, seed: 301 });
     // the Great Gap: the middle of the mist bridge fell long ago (dash)
     bridgeBetween(W, v(27.5, 48, -124), v(4.4, 48, -124), { width: 3.2, arch: 2.4, segLen: 2.1, missing: [4, 5, 6] });
-    R.hint(23.5, 50, -124, 3.4, 'Too far to leap… a swifter step is needed.', 'dash');
-    R.hint(23.5, 50, -124, 3.4, 'Leap, then {dash} in mid-air to cross the Great Gap.', undefined, 'dash');
+    R.hint(23.5, 50, -124, 3.4, 'Too far to leap… leap, then {dash} in mid-air to cross the Great Gap.');
     rockPillar(W, 0, 48, -124, 4.6, 26, { seed: 302 });
     R.enemy('lanternWisp', 9, 52, -121, 0, 'mi_wisp_a');
     R.enemy('lanternWisp', 8, 52.5, -128, 0, 'mi_wisp_b');
     R.add({ type: 'npc', id: 'npc_xun_2', pos: v(1.2, 48, -121.8), yaw: Math.PI * 0.8, npc: 'xun' });
     stoneLantern(W, -2.6, 48, -126.6, 1.5);
     // hidden cave behind the western waterfall
-    waterfall(ctx, -4.6, 60, -124, 3.2, 13, Math.PI / 2, 0xb0d8e8);
+    waterfall(ctx, -4.6, 60, -124, 3.2, 13, Math.PI / 2, 0xe0d8c0);
     stonePlatform(W, -8, 48, -124, 4.4, 4, 1.2, { mat: 'rockDark', trim: null, collide: { safe: true } });
     W.box('rockDark', -10.6, 51, -124, 1, 7, 5, { collide: { walkable: false } });
     W.box('rockDark', -8, 51, -126.4, 6, 7, 1, { collide: { walkable: false } });
@@ -81,11 +80,11 @@ export const Mistfall: RegionDef = {
     incenseShrine(ctx.place(1.6, 0, -151, -Math.PI / 2), 0, 48, 0);
     R.add({ type: 'shrine', id: 'shrine_mistfall', pos: v(1.6, 48, -151), yaw: -Math.PI / 2, name: 'Cloister Shrine' });
     // falls pouring on both sides of the bridges
-    waterfall(ctx, 14, 78, -135, 6, 40, 0.3);
-    waterfall(ctx, 18, 80, -114, 5, 40, Math.PI - 0.4);
-    waterfall(ctx, -14, 82, -118, 7, 44, Math.PI / 2 + 0.2);
-    mistSheet(ctx, 5, 43.5, -140, 110, 90, 0xa8c8d0, 0.7);
-    mistSheet(ctx, 5, 39, -140, 130, 110, 0x5a7a88, 0.95);
+    waterfall(ctx, 14, 78, -135, 6, 40, 0.3, 0xe0d8c0);
+    waterfall(ctx, 18, 80, -114, 5, 40, Math.PI - 0.4, 0xe0d8c0);
+    waterfall(ctx, -14, 82, -118, 7, 44, Math.PI / 2 + 0.2, 0xe0d8c0);
+    mistSheet(ctx, 5, 43.5, -140, 110, 90, 0xd0c0a0, 0.7);
+    mistSheet(ctx, 5, 39, -140, 130, 110, 0x7a6a50, 0.95);
     R.abyss(8, 39, -138, 40, 26, 6);
 
     // ------------------------------------------------------------ M1 · the cloister garden
@@ -181,7 +180,7 @@ export const Mistfall: RegionDef = {
 
     // ------------------------------------------------------------ dressing
     sageStatue(ctx.place(-58, 0, -150, Math.PI / 2), 0, 30, 0, 4.4, { eyesGlow: true, collide: false });
-    lightShaft(ctx, CX, 110, CZ, 14, 70, 0xc8f0ff, 0.14, 0.02);
+    lightShaft(ctx, CX, 110, CZ, 14, 70, 0xffe8b8, 0.14, 0.02);
     for (let i = 0; i < 10; i++) stalactite(W, -50 + i * 9, 100 + (i % 3) * 5, -130 - (i % 4) * 16, 14 + (i % 4) * 4, 2, 320 + i);
     boulder(W, 8, 47.4, -150, 3, 330, { mat: 'rockDark' });
     for (let i = 0; i < 5; i++) {

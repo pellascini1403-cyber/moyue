@@ -96,6 +96,8 @@ export class PlayerController {
   coyote = 0;
   jumpBuffer = 0;
   jumpCuttable = false;
+  /** Time since the last jump started (for the minimum jump). */
+  jumpT = 0;
   airDashes = 1;
   airJumps = 1;
   dashTimer = 0;
@@ -300,6 +302,7 @@ export class PlayerController {
     this.attackBuffer = Math.max(0, this.attackBuffer - dt);
     this.wallCoyote = Math.max(0, this.wallCoyote - dt);
     this.landTimer = Math.max(0, this.landTimer - dt);
+    this.jumpT += dt;
 
     const locked = this.locked || this.state === 'dead';
     let mx = locked ? 0 : input.moveX;
@@ -343,7 +346,7 @@ export class PlayerController {
     // ---------------------------------------------------------------- DASH
     const canAct = !hurtLocked && this.state !== 'heal' && this.state !== 'slam' && this.state !== 'slamLand';
     if (
-      inp.dashPressed && canAct && this.abilities.dash && this.dashCooldown <= 0 && this.state !== 'dash' &&
+      inp.dashPressed && canAct && this.dashCooldown <= 0 && this.state !== 'dash' &&
       (body.grounded || this.airDashes > 0 || this.state === 'wallSlide')
     ) {
       let dx: number, dz: number;
@@ -360,8 +363,9 @@ export class PlayerController {
       const airborne = !body.grounded;
       if (airborne && this.state !== 'wallSlide') this.airDashes--;
       this.dashDir.set(dx, 0, dz);
-      this.dashTimer = t.dashTime;
-      this.iframes = Math.max(this.iframes, t.dashIFrames);
+      // everyone can dash; Cloud Step makes it longer and untouchable
+      this.dashTimer = this.abilities.dash ? t.cloudDashTime : t.dashTime;
+      if (this.abilities.dash) this.iframes = Math.max(this.iframes, t.dashIFrames);
       this.attack = null;
       this.chargeT = 0;
       this.chargeReady = false;
@@ -386,8 +390,10 @@ export class PlayerController {
       } else {
         v.set(this.dashDir.x * t.dashSpeed, 0, this.dashDir.z * t.dashSpeed);
         if (body.grounded) {
+          // follow real ramps; on flat tops ignore edge-contact normals (they dragged a dash off a ledge downward)
           const n = body.groundNormal;
-          if (n.y < 0.999) v.y = -(n.x * v.x + n.z * v.z) / n.y;
+          const gc = body.groundCollider;
+          if (n.y < 0.999 && gc && !gc.upright) v.y = -(n.x * v.x + n.z * v.z) / n.y;
         }
         body.move(world, dt, true);
         if (body.grounded) {
@@ -509,11 +515,12 @@ export class PlayerController {
         this.jumpBuffer = 0;
         this.coyote = 0;
         this.jumpCuttable = true;
+        this.jumpT = 0;
         body.grounded = false;
         if (this.attack && this.attack.t >= this.attack.cancel) this.attack = null;
       }
     }
-    if (this.jumpCuttable && v.y > 0 && !inp.jumpHeld) {
+    if (this.jumpCuttable && v.y > 0 && !inp.jumpHeld && this.jumpT >= t.jumpMinTime) {
       v.y *= t.jumpCutMul;
       this.jumpCuttable = false;
     }
