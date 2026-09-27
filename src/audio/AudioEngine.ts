@@ -300,6 +300,15 @@ export class AudioEngine implements AudioLike {
         this.noiseBurst(x.node, t + 0.02, 0.35, 'lowpass', 1400, 150, 0.8, 0.6);
         if (name === 'kill') this.bell(x.node, t + 0.03, 780 * r(), 0.9, 0.06);
         break;
+      case 'defeat': {
+        // a creature comes undone: a quick rising sparkle of glass-bell notes over an airy shimmer
+        if (!(x = o(0.9, 0.45))) return;
+        const notes = [1568, 2093, 2637, 3136];
+        const k = Math.random() < 0.5 ? 1 : 1.122;
+        notes.forEach((f, i) => this.bell(x!.node, t + i * 0.032, f * k, 0.45 - i * 0.05, 0.24 - i * 0.03, [1, 2.76, 5.4]));
+        this.noiseBurst(x.node, t, 0.3, 'highpass', 6000, 9000, 0.8, 0.3, 0.02);
+        break;
+      }
       case 'clang':
         if (!(x = o(0.8, 0.4))) return;
         this.bell(x.node, t, 690 * r(), 0.6, 0.25, [1, 1.93, 3.1, 4.6]);

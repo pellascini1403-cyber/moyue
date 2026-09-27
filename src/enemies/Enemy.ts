@@ -9,6 +9,7 @@ import { Env } from '../core/env';
 
 const _v = new Vector3();
 const _down = new Vector3(0, -1, 0);
+const _violet = new Color(0.9, 0.4, 1.4);
 
 export interface EnemyStats {
   health: number;
@@ -154,9 +155,12 @@ export abstract class Enemy extends Entity implements Damageable {
     this.dead = true;
     this.deathT = 0;
     this.state = 'dead';
+    this.flash = 1;
     const p = this.position.clone().add(new Vector3(0, this.stats.height * 0.5, 0));
-    this.game.fx.burst(p, { count: 26, color: 0x07080c, speed: 6, dir: hit?.dir ?? new Vector3(0, 1, 0), spread: 0.8, life: 0.8, size: 0.26, gravity: 7, additive: false });
-    this.game.fx.burst(p, { count: 12, color: new Color(1.4, 0.5, 0.9), speed: 4, life: 0.5, size: 0.1, gravity: -1 });
+    // the dark body scatters as ink, then the creature comes undone in colour (see render)
+    this.game.fx.burst(p, { count: 14, color: 0x07080c, speed: 5, dir: hit?.dir ?? new Vector3(0, 1, 0), spread: 0.8, life: 0.6, size: 0.2, gravity: 7, additive: false });
+    this.game.fx.defeat(p, 0.6 + this.stats.height * 0.5, hit?.dir);
+    this.game.sfx('defeat', p);
     this.game.onEnemyKilled(this);
   }
 
@@ -314,9 +318,17 @@ export abstract class Enemy extends Entity implements Damageable {
       m.emissive.copy(base).lerp(new Color(1.6, 1.6, 1.6), this.flash);
     }
     if (this.dead) {
-      const u = Math.min(1, this.deathT / 0.6);
-      this.model.scale.setScalar(1 - u * 0.9);
-      this.model.position.y = -u * 0.2;
+      // pop, then stretch upward and dissolve into violet light (≈ 0.45 s)
+      const d = this.deathT;
+      const pop = 1 + 0.12 * Math.sin(Math.min(1, d / 0.06) * Math.PI * 0.5);
+      const u = Math.min(1, Math.max(0, (d - 0.06) / 0.38));
+      const e = u * u * (3 - 2 * u);
+      const xz = Math.max(0.001, pop * (1 - e));
+      this.model.scale.set(xz, Math.max(0.001, pop * (1 - e) * (1 + 0.9 * e)), xz);
+      this.model.position.y = e * 0.25 * this.stats.height;
+      this.model.visible = u < 1;
+      const k = Math.min(1, d / 0.12);
+      for (const m of this.flashMats) m.emissive.lerp(_violet, k);
     }
     this.animate(dt, t);
   }
@@ -346,6 +358,7 @@ export abstract class Enemy extends Entity implements Damageable {
     this.facing = this.homeYaw;
     this.model.scale.setScalar(1);
     this.model.position.y = 0;
+    this.model.visible = true;
     this.dormant = this.startsDormant;
     this.onReset();
   }

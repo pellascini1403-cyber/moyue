@@ -437,6 +437,26 @@ export function slashTexture(): Texture | null {
   });
 }
 
+/** Spark streak: bright head at u = 1 fading to the tail at u = 0, soft across. */
+export function streakTexture(): Texture | null {
+  return cached('streak', () => {
+    const W = 64, H = 16;
+    const cv = canvas(W, H);
+    if (!cv) return null;
+    const img = cv.g.createImageData(W, H);
+    for (let y = 0; y < H; y++)
+      for (let x = 0; x < W; x++) {
+        const u = x / (W - 1), v = Math.abs(y / (H - 1) - 0.5) * 2;
+        const a = Math.pow(u, 1.6) * (1 - v * v) + (u > 0.86 ? (1 - v) * 0.8 : 0);
+        const i = (y * W + x) * 4;
+        img.data[i] = img.data[i + 1] = img.data[i + 2] = 255;
+        img.data[i + 3] = Math.min(1, a) * 255;
+      }
+    cv.g.putImageData(img, 0, 0);
+    return toTexture(cv.c, false, false);
+  });
+}
+
 /** Stylised waterfall streaks (scrolling). */
 export function waterfallTexture(): Texture | null {
   return cached('waterfall', () => {

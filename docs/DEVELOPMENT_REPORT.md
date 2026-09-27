@@ -137,7 +137,7 @@ Playwright 1.56.1, with software WebGL (SwiftShader).
 
 ## TESTED
 
-### Automated: unit and headless simulation (`npm test`, 54 tests, all passing)
+### Automated: unit and headless simulation (`npm test`, 59 tests, all passing)
 * **Controller (18 tests).** Idle without drift, acceleration and stopping,
   25° ramps, step-up, walls, jump height, variable jump, coyote time, jump
   buffer, running jump distance, dash distance and air-dash limit, double jump,
@@ -152,6 +152,11 @@ Playwright 1.56.1, with software WebGL (SwiftShader).
   the down slash and the spin.
 * **Save (7 tests).** Round-trip, no save, fallback to the backup, both copies
   corrupt, hostile fields, clamping, and a settings round-trip.
+* **Spear, IK and hair (14 tests).** See the protagonist section below.
+* **Effects and camera (5 tests).** The light flash borrows a light slot,
+  fades and hands it back, and slows with slow motion. The enemy-defeat
+  effect scales with enemy size and is gone within about a second. The combat
+  camera framing clears the protagonist's mask for an enemy 1.5 m ahead.
 
 ### Automated: end-to-end in the browser (`npm run e2e`, 15 tests, all passing)
 * The title screen boots with no console errors.
@@ -180,9 +185,10 @@ Playwright 1.56.1, with software WebGL (SwiftShader).
   page errors. The last run was after the final changes.
 * **Ending.** Falling through the broken seal plays the ending text and sets
   `ending_seen`, with no errors.
-* **Audio (`audio-check.mjs`).** The AudioContext runs at 44.1 kHz, all 70
+* **Audio (`audio-check.mjs`).** The AudioContext runs at 44.1 kHz, all 71
   effects play through the graph, and there are no errors. This check can
-  hear nothing.
+  hear nothing. A level measurement on the effects bus showed the new defeat
+  chime peaking at 0.30 against 0.82 for the kill impact it sits on.
 * **Single-file build.** It boots to the title and into play on a desktop
   viewport and on an emulated iPhone 13 in landscape, with no errors. The
   camera sees the player after the opening.
@@ -250,9 +256,52 @@ and it was corrected by comparing renders side by side with the reference.
 - Whether the model is close enough to the reference in the user's eyes.
   This needs the user's confirmation.
 
-**PAUSED**
-- Colourful enemy-defeat effects (requested earlier) are on hold, as
-  instructed, until the protagonist's design is confirmed.
+### Second part: enemy defeat and camera
+
+After the corrected model was shown, the user said to continue. This part
+touches only enemies, effects and the camera. The protagonist model is
+unchanged.
+
+**IMPLEMENTED**
+- **Colourful enemy defeat** (`Effects.defeat`, `Enemy.die` and
+  `Enemy.render`). It lasts about half a second and follows the pattern
+  "dark world → a colourful moment → back to darkness":
+  - a white core flash and a violet halo;
+  - two fine rings (turquoise and violet);
+  - streaking sparks in cyan, blue, violet, magenta, soft gold and
+    turquoise, drawn as one instanced mesh;
+  - a few motes that rise and fade;
+  - a real light that briefly borrows a light-pool slot;
+  - the creature pops and then stretches upward and dissolves into violet
+    light;
+  - a short crystalline chime.
+
+  The effect scales with enemy height, so bosses get a larger one. The old
+  dark ink burst is kept, smaller. The light and particles slow down with
+  slow motion.
+- **Camera.**
+  - The base distance is 6.0 m (previously 6.6) so the character reads
+    larger on a phone.
+  - **Combat framing.** When a living enemy is within 4 m the camera tilts
+    to 0.46 rad (normally 0.30). Lock-on uses the same pitch (previously
+    0.34). Otherwise a small enemy at spear range sat behind the large mask
+    and mane: the line of sight crossed the character at 0.83 m, just below
+    the mask top at 1.0 m. It now crosses at about 1.05 m.
+
+**TESTED**
+- 5 new unit tests (see above).
+- **Browser, in slow motion (4 % speed), a real kill.** Frames were captured
+  both close up and from the gameplay camera: flash, sparks, rings, dissolve,
+  and back to dark.
+- **Autopilot fight.** 2 kills, no errors.
+- **Full suites.** 59 unit tests and 15 E2E tests pass, and the build
+  succeeds.
+
+**NOT YET TESTED**
+- The chime heard by a person. Only its level was measured.
+- The effect's cost on a real phone. It adds up to 96 instanced streaks in
+  one draw call and one borrowed light.
+- Whether the combat pitch feels comfortable to a player.
 
 ## NOT YET TESTED
 

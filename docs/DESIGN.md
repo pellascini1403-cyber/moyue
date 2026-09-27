@@ -65,6 +65,8 @@ Keyboard/mouse and gamepad are fully supported too (see README).
 | Melee | 3-hit spear chain (two sweeps and a lunging thrust, 0.30/0.30/0.40 s, reach 1.75/1.75/1.85 m), overhead air cut (1.7 m), automatic down-thrust (pogo) / up-sweep by soft aim |
 | Charged spin (Moon-Cleave) | hold 0.62 s, 360°, 2.5 damage |
 | Hit feedback | hit-stop 45–90 ms, camera trauma, recoil, flash, ink/spark bursts, moonlight motes |
+| Enemy defeat | ~0.5 s: white core, violet halo, two fine rings, streaking sparks (cyan, blue, violet, magenta, soft gold, turquoise), a brief real light, the body dissolving upward into violet light, a crystalline chime; then darkness |
+| Camera | 6.0 m behind, pitch 0.30; 0.46 when an enemy is within 4 m or locked on, so the view clears the mask |
 | Damage taken | 1 lantern, 1.25 s i-frames, knockback, red vignette |
 
 ## World

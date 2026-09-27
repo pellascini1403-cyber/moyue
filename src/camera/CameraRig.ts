@@ -23,6 +23,8 @@ export interface CameraTargetInfo {
   facing: number;
 }
 
+/** Pitch while fighting: the view clears the mask for an enemy about 1.5 m ahead. */
+const COMBAT_PITCH = 0.46;
 const _desired = new Vector3();
 const _dir = new Vector3();
 const _look = new Vector3();
@@ -38,9 +40,9 @@ export class CameraRig {
   readonly camera: PerspectiveCamera;
   yaw = 0;
   pitch = 0.3;
-  baseDistance = 6.6;
+  baseDistance = 6.0;
   distanceMul = 1;
-  private curDist = 6.6;
+  private curDist = 6.0;
   readonly pivot = new Vector3();
   private pivotY = 0;
   private idleLook = 10;
@@ -53,6 +55,13 @@ export class CameraRig {
   autoRecenter = true;
   shakeScale = 1;
   lockTarget: Vector3 | null = null;
+  /**
+   * 1 while an enemy is close (set by the game). The camera then looks down a
+   * little more, over the protagonist's large mask and mane, so a small enemy
+   * at spear range stays in view instead of hiding behind the head.
+   */
+  combat = 0;
+  private combatK = 0;
   /** Cinematic override: when set, camera eases to this position/look target. */
   cinematic: { pos: Vector3; look: Vector3; lambda: number } | null = null;
   private initialized = false;
@@ -126,12 +135,13 @@ export class CameraRig {
 
     const v = target.velocity;
     const hs = Math.hypot(v.x, v.z);
+    this.combatK = damp(this.combatK, this.combat, 2.5, dt);
 
     if (this.lockTarget) {
       _dir.subVectors(target.position, this.lockTarget);
       const wantYaw = Math.atan2(_dir.x, _dir.z);
       this.yaw = dampAngle(this.yaw, wantYaw, 5, dt);
-      this.pitch = damp(this.pitch, 0.34, 3, dt);
+      this.pitch = damp(this.pitch, COMBAT_PITCH, 3, dt);
     } else if (this.idleLook > 0.9) {
       // Automatic framing
       if (z?.yaw !== undefined && (z.yawStrength ?? 0) > 0) {
@@ -142,8 +152,8 @@ export class CameraRig {
         const d = Math.abs(angleDelta(this.yaw, moveYaw));
         if (d < 2.6) this.yaw = dampAngle(this.yaw, moveYaw, 0.55 * (hs / 7.4), dt);
       }
-      const wantPitch = z?.pitch ?? (v.y < -9 && !target.grounded ? 0.62 : 0.3);
-      this.pitch = damp(this.pitch, wantPitch, v.y < -9 ? 1.6 : 0.8, dt);
+      const wantPitch = z?.pitch ?? (v.y < -9 && !target.grounded ? 0.62 : 0.3 + (COMBAT_PITCH - 0.3) * this.combatK);
+      this.pitch = damp(this.pitch, wantPitch, v.y < -9 ? 1.6 : this.combat ? 1.4 : 0.8, dt);
     }
 
     // Pivot: fast horizontal, slower vertical while airborne (stable jumps).

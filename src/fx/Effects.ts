@@ -1,8 +1,8 @@
 import {
-  AdditiveBlending, BufferGeometry, Color, DoubleSide, DynamicDrawUsage, Float32BufferAttribute, Group, Mesh,
+  AdditiveBlending, BufferGeometry, Color, DoubleSide, DynamicDrawUsage, Float32BufferAttribute, Group, InstancedMesh, Matrix4, Mesh,
   MeshBasicMaterial, NormalBlending, Points, RingGeometry, Scene, ShaderMaterial, Vector3, PlaneGeometry, Quaternion,
 } from 'three';
-import { dotTexture, glowTexture, inkSplatTexture, slashTexture } from '../art/textures';
+import { dotTexture, glowTexture, inkSplatTexture, slashTexture, streakTexture } from '../art/textures';
 import { Rng } from '../core/rng';
 
 const MAX_P = 900;
@@ -90,6 +90,112 @@ export interface BurstOptions {
 const _v = new Vector3();
 const _q = new Quaternion();
 const _y = new Vector3(0, 1, 0);
+const _d = new Vector3();
+const _s = new Vector3();
+const _n = new Vector3();
+const _m = new Matrix4();
+const MAX_STREAKS = 96;
+
+/**
+ * Enemy-defeat palette: cool jewel tones and a soft gold, bright enough to
+ * bloom against the dark caves (values above 1 are HDR).
+ */
+const DEFEAT_COLORS = [
+  new Color(0.35, 1.6, 2.0), // cyan
+  new Color(0.4, 0.65, 2.1), // blue
+  new Color(1.0, 0.45, 2.0), // violet
+  new Color(1.9, 0.35, 1.45), // magenta
+  new Color(2.0, 1.45, 0.55), // soft gold
+  new Color(0.3, 1.85, 1.3), // turquoise
+];
+
+/** Short-lived glowing sparks drawn as streaks along their velocity (one instanced draw call). */
+class Streaks {
+  readonly mesh: InstancedMesh;
+  private pos = new Float32Array(MAX_STREAKS * 3);
+  private vel = new Float32Array(MAX_STREAKS * 3);
+  private col = new Float32Array(MAX_STREAKS * 3);
+  private life = new Float32Array(MAX_STREAKS);
+  private maxLife = new Float32Array(MAX_STREAKS);
+  private width = new Float32Array(MAX_STREAKS);
+  private next = 0;
+  private readonly c = new Color();
+
+  constructor() {
+    const g = new PlaneGeometry(1, 1);
+    g.translate(-0.5, 0, 0); // x ∈ [-1, 0]: the head leads at 0
+    const m = new MeshBasicMaterial({ map: streakTexture(), transparent: true, blending: AdditiveBlending, depthWrite: false, side: DoubleSide, fog: false });
+    this.mesh = new InstancedMesh(g, m, MAX_STREAKS);
+    this.mesh.frustumCulled = false;
+    this.mesh.renderOrder = 32;
+    _m.makeScale(0, 0, 0);
+    for (let i = 0; i < MAX_STREAKS; i++) {
+      this.mesh.setMatrixAt(i, _m);
+      this.mesh.setColorAt(i, this.c.setRGB(0, 0, 0));
+    }
+  }
+
+  spawn(p: Vector3, v: Vector3, color: Color, life: number, width: number): void {
+    const k = this.next;
+    this.next = (this.next + 1) % MAX_STREAKS;
+    this.pos.set([p.x, p.y, p.z], k * 3);
+    this.vel.set([v.x, v.y, v.z], k * 3);
+    this.col.set([color.r, color.g, color.b], k * 3);
+    this.life[k] = this.maxLife[k] = life;
+    this.width[k] = width;
+  }
+
+  update(dt: number, camPos: Vector3): void {
+    let any = false;
+    for (let k = 0; k < MAX_STREAKS; k++) {
+      if (this.life[k] <= 0) continue;
+      any = true;
+      this.life[k] -= dt;
+      const i = k * 3;
+      if (this.life[k] <= 0) {
+        _m.makeScale(0, 0, 0);
+        this.mesh.setMatrixAt(k, _m);
+        continue;
+      }
+      const drag = Math.exp(-3.5 * dt);
+      this.vel[i] *= drag;
+      this.vel[i + 1] = this.vel[i + 1] * drag - 4 * dt;
+      this.vel[i + 2] *= drag;
+      this.pos[i] += this.vel[i] * dt;
+      this.pos[i + 1] += this.vel[i + 1] * dt;
+      this.pos[i + 2] += this.vel[i + 2] * dt;
+      const speed = Math.hypot(this.vel[i], this.vel[i + 1], this.vel[i + 2]);
+      _d.set(this.vel[i], this.vel[i + 1], this.vel[i + 2]).divideScalar(speed || 1);
+      const len = Math.min(0.5, Math.max(0.05, speed * 0.05));
+      _v.set(camPos.x - this.pos[i], camPos.y - this.pos[i + 1], camPos.z - this.pos[i + 2]);
+      const camDist = _v.length();
+      _v.divideScalar(camDist || 1);
+      // never thinner than a few pixels, so the colours still read at play distance
+      const w = Math.max(this.width[k], camDist * 0.008);
+      _s.crossVectors(_d, _v);
+      if (_s.lengthSq() < 1e-6) _s.set(0, 1, 0);
+      _s.normalize();
+      _n.crossVectors(_d, _s);
+      const u = this.life[k] / this.maxLife[k];
+      _m.makeBasis(_d.multiplyScalar(len), _s.multiplyScalar(w * (0.5 + 0.5 * u)), _n);
+      _m.setPosition(this.pos[i], this.pos[i + 1], this.pos[i + 2]);
+      this.mesh.setMatrixAt(k, _m);
+      const f = Math.pow(u, 0.7);
+      this.mesh.setColorAt(k, this.c.setRGB(this.col[i] * f, this.col[i + 1] * f, this.col[i + 2] * f));
+    }
+    if (any) {
+      this.mesh.instanceMatrix.needsUpdate = true;
+      if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
+    }
+  }
+
+  clear(): void {
+    this.life.fill(0);
+    _m.makeScale(0, 0, 0);
+    for (let i = 0; i < MAX_STREAKS; i++) this.mesh.setMatrixAt(i, _m);
+    this.mesh.instanceMatrix.needsUpdate = true;
+  }
+}
 
 /** Pooled combat & world effects: slash arcs, particles, rings, flashes. */
 export class Effects {
@@ -100,12 +206,15 @@ export class Effects {
   private rng = new Rng(99);
   private slashMat: MeshBasicMaterial;
   private slashGeos = new Map<string, BufferGeometry>();
+  private streaks = new Streaks();
   attractTarget = new Vector3();
+  /** Hook for a brief real light (set by the game to the light pool). */
+  onLight?: (pos: Vector3, color: Color, intensity: number, distance: number, dur: number) => void;
 
   constructor(scene: Scene) {
     this.add = makeParticles(true);
     this.ink = makeParticles(false);
-    this.group.add(this.add.points, this.ink.points);
+    this.group.add(this.add.points, this.ink.points, this.streaks.mesh);
     this.slashMat = new MeshBasicMaterial({
       map: slashTexture(), transparent: true, blending: AdditiveBlending, depthWrite: false, side: DoubleSide, fog: false,
     });
@@ -189,8 +298,8 @@ export class Effects {
     (m.material as MeshBasicMaterial).color.set(color);
   }
 
-  ring(pos: Vector3, radius: number, color: Color | number, dur = 0.5, opacity = 0.8, up = new Vector3(0, 1, 0)): void {
-    const g = RING_GEO;
+  ring(pos: Vector3, radius: number, color: Color | number, dur = 0.5, opacity = 0.8, up = new Vector3(0, 1, 0), thin = false): void {
+    const g = thin ? THIN_RING_GEO : RING_GEO;
     const tr = this.transient('ring', g, RING_MAT, dur);
     tr.mesh.position.copy(pos);
     tr.mesh.quaternion.setFromUnitVectors(new Vector3(0, 0, 1), up);
@@ -264,7 +373,42 @@ export class Effects {
     }
   }
 
-  update(dt: number, camQuat: Quaternion): void {
+  /**
+   * An enemy is defeated: a white-hot core, a violet halo, two fine rings,
+   * streaking sparks in cool jewel tones and soft gold, a few motes that drift
+   * up and fade, and a brief real light. About half a second, then darkness.
+   * `size` scales it (1 = a small creature); `dir` biases the sparks away from the blow.
+   */
+  defeat(pos: Vector3, size = 1, dir?: Vector3): void {
+    const s = Math.max(0.6, Math.min(2.5, size));
+    this.flash(pos, 1.25 * s, new Color(1.7, 1.9, 2.2), 0.1);
+    this.flash(pos, 2.3 * s, new Color(1.0, 0.42, 1.5), 0.24);
+    _v.copy(pos).addScaledVector(_y, -0.25 * s);
+    this.ring(_v, 1.25 * s, new Color(0.35, 1.5, 1.4), 0.36, 0.7, _y, true);
+    this.ring(_v, 0.75 * s, new Color(1.2, 0.5, 1.7), 0.3, 0.6, _y, true);
+    const n = Math.min(36, Math.round(20 * s));
+    for (let i = 0; i < n; i++) {
+      // mostly outward and upward, leaning away from the blow
+      let dx = this.rng.range(-1, 1), dy = this.rng.range(-0.2, 1), dz = this.rng.range(-1, 1);
+      if (dir) {
+        dx += dir.x * 0.6;
+        dz += dir.z * 0.6;
+      }
+      const l = Math.hypot(dx, dy, dz) || 1;
+      const sp = this.rng.range(5.5, 9.5) * Math.sqrt(s);
+      _d.set((dx / l) * sp, (dy / l) * sp + 1.5, (dz / l) * sp);
+      this.streaks.spawn(pos, _d, DEFEAT_COLORS[i % DEFEAT_COLORS.length], this.rng.range(0.25, 0.5), 0.055 * Math.sqrt(s));
+    }
+    this.burst(pos, { count: Math.round(8 * s), color: DEFEAT_COLORS[4], speed: 3.5, spread: 1, life: 0.45, size: 0.1, gravity: 3 });
+    this.burst(pos, { count: Math.round(6 * s), color: DEFEAT_COLORS[0], speed: 3, spread: 1, life: 0.4, size: 0.09, gravity: 2 });
+    for (const c of [DEFEAT_COLORS[2], DEFEAT_COLORS[5], DEFEAT_COLORS[4]]) {
+      this.burst(pos, { count: Math.round(3 * s), color: c.clone().multiplyScalar(0.7), speed: 1.3, spread: 1, life: 1.1, size: 0.075, gravity: -1.3, drag: 1.8 });
+    }
+    this.onLight?.(pos, new Color(0.65, 0.5, 1.0), 2.6 * s, 4.5 * s, 0.32);
+  }
+
+  update(dt: number, camQuat: Quaternion, camPos?: Vector3): void {
+    if (camPos) this.streaks.update(dt, camPos);
     for (const buf of [this.add, this.ink]) {
       const tgt = this.attractTarget;
       for (let k = 0; k < MAX_P; k++) {
@@ -337,6 +481,7 @@ export class Effects {
   }
 
   clear(): void {
+    this.streaks.clear();
     for (const b of [this.add, this.ink]) b.life.fill(0);
     for (const t of this.transients) {
       t.active = false;
@@ -346,6 +491,7 @@ export class Effects {
 }
 
 const RING_GEO = new RingGeometry(0.85, 1, 48, 1);
+const THIN_RING_GEO = new RingGeometry(0.95, 1, 64, 1);
 const RING_MAT = new MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: AdditiveBlending, depthWrite: false, side: DoubleSide, fog: false });
 const FLASH_GEO = new PlaneGeometry(1, 1);
 const FLASH_MAT = new MeshBasicMaterial({ map: glowTexture(), transparent: true, blending: AdditiveBlending, depthWrite: false, fog: false });

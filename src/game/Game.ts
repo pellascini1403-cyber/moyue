@@ -149,6 +149,7 @@ export class Game implements MenuHost {
     this.world = new World(this.scene, this.physics, this.renderer);
     this.world.viewScale = this.renderer.profile.viewScale;
     this.fx = new Effects(this.scene);
+    this.fx.onLight = (p, c, i, d, dur) => this.world.lightPool.flash(p, c, i, d, dur);
     this.ui = h('div', { id: 'moyue-ui' });
     container.appendChild(this.ui);
     this.hud = new Hud(this.ui);
@@ -759,10 +760,12 @@ export class Game implements MenuHost {
       const pos = this.player.view ? this.player.view.root.position : this.player.position;
       const lt = this.player.lockTarget;
       this.cam.lockTarget = lt && lt.canBeHit() ? lt.hurtboxes()[0]?.center ?? null : null;
+      this.cam.combat = this.mode === 'play' && this.enemyNear(pos, 4) ? 1 : 0;
       const camTarget = this.mode === 'title' ? (this.world.byId('threshold')?.content.points.titleLook ?? pos) : pos;
       this.cam.update(dt, { position: camTarget, velocity: this.player.ctrl.velocity, grounded: this.player.ctrl.grounded, facing: this.player.ctrl.facing }, this.mode === 'play' ? look : { x: 0, y: 0 }, this.physics, false);
       for (const e of this.entities) if (e.alive && (e.awake || e instanceof Gate)) e.render(this.hitstopT > 0 ? 0 : visualDt, alpha, t);
       const focus = this.mode === 'title' ? this.cam.camera.position : pos;
+      this.world.lightPool.flashTimeScale = this.hitstopT > 0 ? 0.2 : this.timeScale;
       const changed = this.world.update(dt, t, focus, this.cam.camera.position, this.renderer.pixelRatio);
       if (changed && this.mode !== 'title') this.onRegionChanged(changed);
       this.cam.camera.getWorldDirection(_f);
@@ -778,7 +781,7 @@ export class Game implements MenuHost {
       }
     }
     this.cam.camera.getWorldQuaternion(_q);
-    this.fx.update(this.hitstopT > 0 ? dt * 0.2 : dt * this.timeScale, _q);
+    this.fx.update(this.hitstopT > 0 ? dt * 0.2 : dt * this.timeScale, _q, this.cam.camera.position);
     this.renderer.flash = Math.max(0, this.renderer.flash - dt * 3);
     this.renderer.damage = Math.max(0, this.renderer.damage - dt * 1.2);
     this.renderer.render(this.scene, this.cam.camera, dt);
@@ -1441,6 +1444,16 @@ export class Game implements MenuHost {
     this.fx.burst(pl.position.clone().add(new Vector3(0, 0.6, 0)), { count: 10, color: 0x08090c, speed: 4, spread: 1, life: 0.6, size: 0.2, gravity: 8, additive: false });
     this.events.emit('playerDamaged', { health: pl.health });
     return true;
+  }
+
+  /** Is a living enemy within `r` metres (horizontally, and roughly at the same level)? */
+  private enemyNear(p: Vector3, r: number): boolean {
+    for (const e of this.entities) {
+      if (!(e instanceof Enemy) || !e.canBeHit()) continue;
+      const dx = e.position.x - p.x, dz = e.position.z - p.z;
+      if (dx * dx + dz * dz < r * r && Math.abs(e.position.y - p.y) < 2.5) return true;
+    }
+    return false;
   }
 
   onEnemyKilled(e: Enemy): void {
