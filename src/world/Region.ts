@@ -40,7 +40,7 @@ export type SpawnDef =
   | { type: 'gate'; id: string; pos: Vector3; yaw: number; width: number; height: number; kind: 'portcullis' | 'sealDoor' | 'barrier' }
   | { type: 'breakWall'; id: string; pos: Vector3; yaw: number; w: number; h: number; d: number }
   | { type: 'crackedFloor'; id: string; pos: Vector3; w: number; d: number }
-  | { type: 'platform'; id: string; path: Vector3[]; w: number; d: number; speed: number; pause?: number; style?: 'lantern' | 'stone' | 'lift'; trigger?: 'always' | 'ride' }
+  | { type: 'platform'; id: string; path: Vector3[]; w: number; d: number; speed: number; pause?: number; style?: 'lantern' | 'stone' | 'lift'; trigger?: 'always' | 'ride' | 'ferry' }
   | { type: 'hazardZone'; id: string; pos: Vector3; half: Vector3; damage: number; kind: 'thorns' | 'pool' | 'abyss' }
   | { type: 'thornLotus'; id: string; pos: Vector3; scale?: number }
   | { type: 'trigger'; id: string; pos: Vector3; half: Vector3; event: string; once?: boolean }

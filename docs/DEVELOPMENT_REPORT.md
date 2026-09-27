@@ -138,7 +138,7 @@ Playwright 1.56.1, with software WebGL (SwiftShader).
 
 ## TESTED
 
-### Automated: unit and headless simulation (`npm test`, 66 tests, all passing)
+### Automated: unit and headless simulation (`npm test`, 67 tests, all passing)
 * **Controller (25 tests).** Idle without drift, acceleration and stopping,
   25° ramps, step-up, walls, jump height (above 3.1 m), unchanged gravity,
   variable jump and the quick-tap hop, coyote time, jump buffer, running jump
@@ -148,7 +148,7 @@ Playwright 1.56.1, with software WebGL (SwiftShader).
   crossing a 7 m gap that a jump alone cannot. Also double jump,
   cling and wall jump on climbable walls only, platform carry, ramp crests,
   roof slide-off, and chimney climbing.
-* **Traversal (11 tests).** Each region's real collision geometry is built in
+* **Traversal (12 tests).** Each region's real collision geometry is built in
   Node, and an autopilot drives the real controller. The tests prove the
   critical path from tomb to ending, and prove that each gate is impassable
   without its ability. The Great Gap is too far for a jump alone and is
@@ -164,7 +164,7 @@ Playwright 1.56.1, with software WebGL (SwiftShader).
   effect scales with enemy size and is gone within about a second. The combat
   camera framing clears the protagonist's mask for an enemy 1.5 m ahead.
 
-### Automated: end-to-end in the browser (`npm run e2e`, 18 tests, all passing)
+### Automated: end-to-end in the browser (`npm run e2e`, 19 tests, all passing)
 * The title screen boots with no console errors.
 * A new game plays the opening, and the keyboard moves the player.
 * After the full opening with no input, the scripted camera hands control back
@@ -182,6 +182,9 @@ Playwright 1.56.1, with software WebGL (SwiftShader).
   - The touch DASH button is shown from the start and dashes.
   - At the Great Gap a jump alone falls into the mist and respawns the player
     on the near side, while jump + dash lands on the island and stays there.
+* Nearby platforms, gates, urns, levers, altars and lotus pads are actually
+  drawn at four places in the world. This test fails on the old culling (see
+  the stuck report below).
 * Settings survive a reload. Resting at a shrine saves, and Continue restores
   the shrine, abilities and pickups. A corrupted save falls back to the backup.
 
@@ -405,6 +408,48 @@ movement and no abilities:
   WebGL.
 - Whether the easier early game (the Great Gap no longer needs the trial)
   changes pacing in a full playthrough.
+
+## Stuck at the end of the Threshold (user report)
+
+The user commented on the published page that they could not reach the
+next part of the map, not even from "the kind of platform" there.
+
+**Cause: a regression from the draw-call pass (commit 94ad906).** Entity
+distance culling measured each entity's *root* position. Many entities keep
+their root at the world origin and place their parts in world coordinates:
+- moving platforms;
+- gates, levers, urns and breakable walls;
+- steles, ability altars and thorn-lotus pads.
+
+The world sits about 100 m above the origin, so all of these were
+permanently hidden. They still collided, but they were invisible. At the end
+of the Threshold, the lantern raft that carries you to the Terraces could
+not be seen, and the player had no visible way on. The route simulations
+could not catch this because they do not render.
+
+**IMPLEMENTED**
+- Culling now uses each entity's world position.
+- The lantern raft is now a **ferry**, a new platform mode. It waits level
+  with the hanging raft, right beside it and in view, with a lit lantern post
+  on its deck. It carries you to the far ledge and comes back for you from
+  either side. It used to shuttle on a timer 1.2 m lower, where the camera on
+  the hanging raft never showed it. The hint now says to step onto it.
+
+**TESTED**
+- The whole Threshold route in the real game, driven step by step. It went
+  from the tomb to the Terraces gate with no damage, both before and after the
+  raft change.
+- A new E2E test fails on the old culling (the lantern raft and 6 other
+  entities were hidden) and passes with the fix.
+- A new traversal test covers the return trip: the raft comes back for you
+  from the far ledge.
+- Captures show the raft, its lantern and the trial altar visible again.
+- 67 unit tests and 19 E2E tests pass.
+
+**NOT YET TESTED**
+- Whether this was the exact spot where the user was stuck. The comment did
+  not say where. It was the most likely spot, and the culling fix affects the
+  whole game.
 
 ## NOT YET TESTED
 

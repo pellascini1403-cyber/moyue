@@ -25,11 +25,24 @@ describe('Region 1 — Cicada Threshold', () => {
       { to: v3(-28, 98.6, -45), tol: 1.2, label: 'broken bridge', timeout: 15 },
       { to: v3(-28, 98.6, -52), jump: 'none', label: 'plateau' },
       { to: v3(-24, 96.4, -64.6), label: 'hanging raft', tol: 0.8 },
-      { to: v3(-19, 95.2, -68), label: 'board the moving raft', tol: 1.0, waitFor: (s) => s.platformPos('th_lift_mp').x < -18.6 },
+      // the lantern raft waits beside the hanging raft, level with it
+      { to: v3(-20, 96.4, -64.6), jump: 'none', label: 'step onto the lantern raft', tol: 0.8 },
       { to: v3(-7, 93.4, -70), label: 'ride and hop off', tol: 1.2, waitFor: (s) => s.platformPos('th_lift_mp').x > -11.4 },
       { to: v3(-7, 90, -81.5), jump: 'none', label: 'down to the terrace gate' },
     ];
     const r = runRoute(sim, v3(0, 100.45, 1.6), legs, noAbilities(), 80);
+    expect(r.ok, `failed at "${r.label}" at ${fmt(r.pos)}`).toBe(true);
+  });
+
+  it('the lantern raft comes back for you from the far ledge and carries you home', () => {
+    const legs: Leg[] = [
+      // it is waiting at the hanging raft; walking up to the far end calls it over
+      { to: v3(-9.5, 93.4, -69), jump: 'none', label: 'wait at the far ledge', tol: 1.0 },
+      { to: v3(-11, 95.2, -68), label: 'board it there', tol: 1.0, waitFor: (s) => s.platformPos('th_lift_mp').x > -11.4 },
+      { to: v3(-24, 96.4, -64.6), label: 'ride back and step off', tol: 0.9, waitFor: (s) => s.platformPos('th_lift_mp').x < -19.6, timeout: 12 },
+      { to: v3(-28, 98.6, -58), label: 'up to the plateau', tol: 1.2 },
+    ];
+    const r = runRoute(sim, v3(-7, 93.5, -71), legs, noAbilities(), 80);
     expect(r.ok, `failed at "${r.label}" at ${fmt(r.pos)}`).toBe(true);
   });
 

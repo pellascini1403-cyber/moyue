@@ -6,6 +6,7 @@ import { REGIONS } from '../../src/world/regions';
 import { RegionContent, RegionDef, SpawnDef } from '../../src/world/Region';
 import { PlayerController, emptyInput, PlayerFrameInput } from '../../src/player/PlayerController';
 import { Abilities, noAbilities } from '../../src/player/Abilities';
+import { FerryState, ferryTarget, newFerry } from '../../src/world/ferry';
 
 export const DT = 1 / 60;
 
@@ -15,7 +16,8 @@ interface SimPlatform {
   path: Vector3[];
   speed: number;
   pause: number;
-  trigger: 'always' | 'ride';
+  trigger: 'always' | 'ride' | 'ferry';
+  ferry: FerryState;
   t: number;
   dir: number;
   pauseT: number;
@@ -83,7 +85,7 @@ export class SimWorld {
         let total = 0;
         for (let i = 0; i < s.path.length - 1; i++) total += s.path[i].distanceTo(s.path[i + 1]);
         const c = P.addDynamic(Collider.box(s.path[0].clone().add(new Vector3(0, -0.25, 0)), new Vector3(s.w / 2, 0.25, s.d / 2), undefined, { safe: false, tag: 'platform' }));
-        this.platforms.push({ id: s.id, collider: c, path: s.path, speed: s.speed, pause: s.pause ?? 0.8, trigger: s.trigger ?? 'always', t: 0, dir: 1, pauseT: 0, total, ridden: 0 });
+        this.platforms.push({ id: s.id, collider: c, path: s.path, speed: s.speed, pause: s.pause ?? 0.8, trigger: s.trigger ?? 'always', ferry: newFerry(), t: 0, dir: 1, pauseT: 0, total, ridden: 0 });
         break;
       }
       case 'ability':
@@ -116,8 +118,11 @@ export class SimWorld {
     for (const p of this.platforms) {
       const onMe = pc.grounded && pc.body.groundCollider === p.collider;
       p.ridden = onMe ? 0 : p.ridden + dt;
-      if (p.trigger === 'ride') {
-        const target = onMe ? p.total : p.ridden > 1.5 ? 0 : p.t;
+      if (p.trigger === 'ride' || p.trigger === 'ferry') {
+        const pp = pc.position;
+        const target = p.trigger === 'ferry'
+          ? ferryTarget(p.ferry, onMe, p.ridden, p.t, p.total, pp.distanceTo(p.path[0]), pp.distanceTo(p.path[p.path.length - 1]))
+          : onMe ? p.total : p.ridden > 1.5 ? 0 : p.t;
         const st = p.speed * dt;
         p.t = Math.abs(target - p.t) <= st ? target : p.t + Math.sign(target - p.t) * st;
       } else if (p.pauseT > 0) p.pauseT -= dt;

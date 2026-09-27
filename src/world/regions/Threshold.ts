@@ -170,12 +170,15 @@ export const Threshold: RegionDef = {
     stonePlatform(W, -24, lpY, -64.6, 3.2, 3.2, 0.6, { mat: 'woodDark', trim: 'wood', collide: { safe: true } });
     for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) W.box('chain', -24 + sx * 1.4, lpY + 15, -64.6 + sz * 1.4, 0.05, 30, 0.05, {});
     hangingLantern(W, -24, lpY - 0.6, -64.6, 0.1, 0.5);
-    R.add({ type: 'platform', id: 'th_lift_mp', path: [v(-19, lpY - 1.2, -68), v(-11, lpY - 1.2, -68)], w: 3, d: 3, speed: 2.2, pause: 0.9, style: 'lantern', trigger: 'always' });
+    // The lantern raft waits level with the hanging raft, right beside it and in view, carries you
+    // to the far ledge, and comes back for you from either side (it used to shuttle 1.2 m lower,
+    // hidden from the camera on the hanging raft, so players never saw it coming).
+    R.add({ type: 'platform', id: 'th_lift_mp', path: [v(-20.0, lpY, -64.6), v(-11, lpY - 1.2, -68)], w: 3, d: 3, speed: 2.4, style: 'lantern', trigger: 'ferry' });
     ledge(W, -7, lpY - 3, -70, 5, 5, { depth: 8, seed: 70 });
     stoneLantern(W, -8.8, lpY - 3, -68.4, 1.5);
     stairFlight(W, v(-7, 90, -79), v(-7, lpY - 3, -72.5), 3.4, true);
     ceremonialGate(ctx.place(-7, 0, -79.5, 0), 0, 90, 0, 6.4, 6.8, { tiers: 3 });
-    R.hint(-24, lpY, -64.6, 2.4, 'Wait for the lantern raft, then {jump}.');
+    R.hint(-24, lpY, -64.6, 2.4, 'Step onto the lantern raft beside you. It will carry you across.');
 
     // ------------------------------------------------------------ vistas: things seen from here
     // A colossal moth-sage carved into the western cavern wall

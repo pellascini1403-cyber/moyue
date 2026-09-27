@@ -111,3 +111,40 @@ test('the Great Gap: a jump alone falls short; jump + the forward dash crosses i
   expect(across.end[0]).toBeLessThan(15.5);
   expect(errors).toEqual([]);
 });
+
+test('nearby platforms, gates, urns, levers and altars are drawn (not culled)', async ({ page }) => {
+  const errors = await startAt(page, -24, 96.5, -64.6, Math.PI / 2);
+  const spots = [
+    [-24, 96.5, -64.6], // Threshold: hanging raft beside the lantern raft
+    [34, 54.1, -95], // Terraces: pagoda foot, beside the lift
+    [22, 82.1, -100], // Terraces: trial terrace (altar, barriers)
+    [-10, 16.1, -197], // Sanctum: thorn pool (lotus pads)
+  ];
+  for (const s of spots) {
+    await page.evaluate((s) => {
+      const g = (window as any).__MOYUE__;
+      const V = g.player.position.constructor;
+      g.spawnPlayer(new V(s[0], s[1], s[2]), 0);
+    }, s);
+    await waitGame(page, 0.4);
+    const hidden = await page.evaluate(() => {
+      const g = (window as any).__MOYUE__;
+      const cam = g.cam.camera.position;
+      const out: string[] = [];
+      for (const e of g.entities) {
+        if (!e.alive || !e.root?.parent || e === g.player) continue;
+        if (e.position.distanceTo(cam) > 30) continue;
+        let x = e.root, vis = true;
+        while (x) {
+          if (!x.visible) vis = false;
+          x = x.parent;
+        }
+        // entities may hide themselves (dead, consumed); only the region holder chain matters here
+        if (!vis && e.root.visible) out.push(`${e.constructor.name}:${e.id}`);
+      }
+      return out;
+    });
+    expect(hidden, `hidden near ${s}`).toEqual([]);
+  }
+  expect(errors).toEqual([]);
+});

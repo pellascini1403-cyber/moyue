@@ -213,7 +213,12 @@ export class World {
     return { triangles, meshes, lights };
   }
 
-  addToRegion(regionId: string, o: Object3D): void {
+  /**
+   * `anchor`: the entity's world position, used for distance culling. Many
+   * entities keep their root at the origin and place their parts in world
+   * coordinates, so the root's own position cannot be used.
+   */
+  addToRegion(regionId: string, o: Object3D, anchor?: Vector3): void {
     const r = this.byId(regionId);
     if (!r) {
       this.scene.add(o);
@@ -221,6 +226,7 @@ export class World {
     }
     // a holder lets distance culling hide the entity without touching its own visibility
     const holder = new Group();
+    holder.userData.anchor = anchor ?? o.position;
     holder.add(o);
     r.group.add(holder);
     r.holders.push(holder);
@@ -237,7 +243,7 @@ export class World {
         reg.holders.splice(i, 1);
         continue;
       }
-      h.visible = o.position.distanceToSquared(cam) < d2;
+      h.visible = (h.userData.anchor as Vector3).distanceToSquared(cam) < d2;
     }
   }
 }

@@ -3,6 +3,7 @@ import {
   Sprite, Vector3, Quaternion, Euler,
 } from 'three';
 import { Entity } from './Entity';
+import { ferryTarget, newFerry } from '../world/ferry';
 import type { Game } from '../game/Game';
 import { Damageable, HitInfo, HitResult, Hurtbox } from '../combat/Combat';
 import { Collider } from '../physics/Collider';
@@ -46,7 +47,7 @@ export class Shrine extends Entity {
       this.glow.position.copy(censer).sub(pos);
       this.root.add(this.glow);
       this.root.position.copy(pos);
-      game.world.addToRegion(region, this.root);
+      game.world.addToRegion(region, this.root, this.position);
     }
   }
 
@@ -97,7 +98,7 @@ export class Stele extends Entity {
       g.rotation.y = yaw;
       g.position.copy(pos);
       this.root.add(g);
-      game.world.addToRegion(region, this.root);
+      game.world.addToRegion(region, this.root, this.position);
       const halo = new Sprite(glowSpriteMaterial(new Color(0.5, 0.45, 0.3), 0.25));
       halo.scale.setScalar(2.4);
       halo.position.set(pos.x, pos.y + 1.7, pos.z);
@@ -141,7 +142,7 @@ export class AbilityAltar extends Entity {
       this.relic = buildRelic(ability === 'bellStrike' ? new Color(1.6, 1.2, 0.6) : new Color(0.9, 1.5, 1.3));
       this.relic.root.position.set(pos.x, pos.y + 1.9, pos.z);
       this.root.add(this.relic.root);
-      game.world.addToRegion(region, this.root);
+      game.world.addToRegion(region, this.root, this.position);
     }
     game.physics.add(Collider.cylinder(pos.clone().add(new Vector3(0, 0.5, 0)), 0.8, 0.5, { walkable: true, safe: true }));
   }
@@ -190,7 +191,7 @@ export class FragmentPickup extends Entity {
       this.view = buildFragment();
       this.root.add(this.view.root);
       this.root.position.copy(pos);
-      game.world.addToRegion(region, this.root);
+      game.world.addToRegion(region, this.root, this.position);
     }
   }
   syncFromSave(): void {
@@ -275,7 +276,7 @@ export class Urn extends Entity implements Damageable {
       this.mesh.position.copy(pos);
       this.mesh.rotation.y = hashString(id);
       this.root.add(this.mesh);
-      game.world.addToRegion(region, this.root);
+      game.world.addToRegion(region, this.root, this.position);
     }
   }
   syncFromSave(): void {
@@ -321,7 +322,7 @@ export class Npc extends Entity {
       this.root.add(this.view.root);
       this.root.position.copy(pos);
       this.view.root.rotation.y = yaw;
-      game.world.addToRegion(region, this.root);
+      game.world.addToRegion(region, this.root, this.position);
     }
     game.physics.add(Collider.cylinder(pos.clone().add(new Vector3(0, 0.6, 0)), 0.4, 0.6, { walkable: false, camera: false }));
   }
@@ -405,7 +406,7 @@ export class Gate extends Entity {
       this.mesh.position.set(pos.x, this.closedY, pos.z);
       this.mesh.rotation.y = yaw;
       this.root.add(this.mesh);
-      game.world.addToRegion(region, this.root);
+      game.world.addToRegion(region, this.root, this.position);
     }
     if (kind === 'barrier') this.setOpen(true, true);
   }
@@ -468,7 +469,7 @@ export class Lever extends Entity implements Damageable {
       this.handle.add(knob);
       this.handle.rotation.x = 0.5;
       this.root.add(this.handle);
-      game.world.addToRegion(region, this.root);
+      game.world.addToRegion(region, this.root, this.position);
     }
   }
   syncFromSave(): void {
@@ -528,7 +529,7 @@ export class BreakWall extends Entity implements Damageable {
         this.mesh.add(c);
       }
       mergeRigParts(this.mesh);
-      game.world.addToRegion(region, this.root);
+      game.world.addToRegion(region, this.root, this.position);
     }
   }
   syncFromSave(): void {
@@ -578,9 +579,10 @@ export class MovingPlatform extends Entity {
   private mesh: Group | null = null;
   private ridden = 0;
   private prevCenter = new Vector3();
+  private ferry = newFerry();
 
   constructor(game: Game, id: string, region: string, public path: Vector3[], public w: number, public d: number, public speed: number,
-    public pause = 0.8, public style: 'lantern' | 'stone' | 'lift' = 'stone', public trigger: 'always' | 'ride' = 'always') {
+    public pause = 0.8, public style: 'lantern' | 'stone' | 'lift' = 'stone', public trigger: 'always' | 'ride' | 'ferry' = 'always') {
     super(game, id, region);
     for (let i = 0; i < path.length - 1; i++) {
       const l = path[i].distanceTo(path[i + 1]);
@@ -617,9 +619,22 @@ export class MovingPlatform extends Entity {
         g.position.copy(lamp.position);
         this.mesh.add(g);
       }
+      if (style === 'lantern') {
+        // a lit lantern post on the deck, so the raft reads as the way on from above
+        const post = new Mesh(new CylinderGeometry(0.05, 0.06, 1.2, 6), mats.wood);
+        post.position.set(w / 2 - 0.3, 0.6, -d / 2 + 0.3);
+        this.mesh.add(post);
+        const lantern = new Mesh(new CylinderGeometry(0.16, 0.14, 0.32, 6), new MeshBasicMaterial({ color: new Color(2.2, 1.2, 0.5) }));
+        lantern.position.set(w / 2 - 0.3, 1.3, -d / 2 + 0.3);
+        this.mesh.add(lantern);
+        const halo = new Sprite(glowSpriteMaterial(new Color(1, 0.6, 0.25), 0.9));
+        halo.scale.setScalar(1.8);
+        halo.position.copy(lantern.position);
+        this.mesh.add(halo);
+      }
       this.mesh.position.copy(path[0]);
       this.root.add(this.mesh);
-      game.world.addToRegion(region, this.root);
+      game.world.addToRegion(region, this.root, this.position);
     }
   }
 
@@ -639,8 +654,11 @@ export class MovingPlatform extends Entity {
     const pc = this.game.player.ctrl;
     const onMe = pc.grounded && pc.body.groundCollider === this.collider;
     this.ridden = onMe ? 0 : this.ridden + dt;
-    if (this.trigger === 'ride') {
-      const target = onMe ? this.total : this.ridden > 1.5 ? 0 : this.t;
+    if (this.trigger === 'ride' || this.trigger === 'ferry') {
+      const pp = this.game.player.position;
+      const target = this.trigger === 'ferry'
+        ? ferryTarget(this.ferry, onMe, this.ridden, this.t, this.total, pp.distanceTo(this.path[0]), pp.distanceTo(this.path[this.path.length - 1]))
+        : onMe ? this.total : this.ridden > 1.5 ? 0 : this.t;
       const step = this.speed * dt;
       if (Math.abs(target - this.t) <= step) this.t = target;
       else this.t += Math.sign(target - this.t) * step;
@@ -693,7 +711,7 @@ export class ThornLotus extends Entity {
       g.scale.setScalar(1.6 * scale);
       g.position.copy(pos).y += 0.4 * scale;
       this.root.add(g);
-      game.world.addToRegion(region, this.root);
+      game.world.addToRegion(region, this.root, this.position);
     }
     this.sleepDistance = 0;
   }

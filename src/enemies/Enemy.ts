@@ -75,7 +75,7 @@ export abstract class Enemy extends Entity implements Damageable {
     this.position.copy(pos);
     this.prevPosition.copy(pos);
     this.root.add(this.model);
-    if (!Env.headless) game.world.addToRegion(regionId, this.root);
+    if (!Env.headless) game.world.addToRegion(regionId, this.root, this.position);
     this.hurt.push({ center: new Vector3(), radius: stats.radius * 1.15 });
   }
 
