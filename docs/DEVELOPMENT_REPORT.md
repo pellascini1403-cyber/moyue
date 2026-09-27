@@ -394,6 +394,10 @@ movement and no abilities:
     This was the existing i-frame blink after an enemy hit (the HUD showed the
     lost lanterns), not a regression.
 - **Autopilot fight.** 2 kills, no errors.
+- **Single-file build.** It boots into play with no errors, running the new
+  tuning. The published page was updated to this build (version 2 at the same
+  link). It now has the new protagonist, the jump, the dash and the warm
+  grading.
 
 **NOT YET TESTED**
 - How the new jump and dash feel in human hands, on a real phone.
