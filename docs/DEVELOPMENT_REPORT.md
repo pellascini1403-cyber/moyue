@@ -137,7 +137,7 @@ Playwright 1.56.1, with software WebGL (SwiftShader).
 
 ## TESTED
 
-### Automated: unit and headless simulation (`npm test`, 40 tests, all passing)
+### Automated: unit and headless simulation (`npm test`, 54 tests, all passing)
 * **Controller (18 tests).** Idle without drift, acceleration and stopping,
   25° ramps, step-up, walls, jump height, variable jump, coyote time, jump
   buffer, running jump distance, dash distance and air-dash limit, double jump,
@@ -190,6 +190,69 @@ Playwright 1.56.1, with software WebGL (SwiftShader).
   Terraces, Mistfall and Sanctum points measured. About 360 at the Threshold
   overlook, the widest vista, which drops to about 215 on low quality. Before
   the optimisations, Mistfall used about 268.
+
+## Protagonist integration pass
+
+The user supplied a new protagonist: a front three-quarter render and a
+sheet of eight poses. No 3D file was supplied. The character was rebuilt in
+code to match the images; details are in [`PROTAGONIST.md`](PROTAGONIST.md).
+The first attempt did not follow the reference closely. The user stopped it,
+and it was corrected by comparing renders side by side with the reference.
+
+**IMPLEMENTED**
+- **Model.** Mask-head, hair, buns and pins, cloak, chest plate, sash,
+  two-tier skirt, pauldrons, arms, legs, and a spear with a phoenix pommel,
+  ribbons and a flame head. All are built to the measured proportions.
+- **Integration with the existing player system.** Rig joint names, the
+  controller, the collision capsule, the camera, abilities and saves are
+  unchanged.
+- **Animation.**
+  - Poses for idle, walk and run, take-off, rise, fall, landing, dash, wall
+    cling, hurt, death, heal, slam and charge.
+  - Gestures for Lantern Flare (a palm strike), interaction (a bow of the
+    head) and learning a technique (the spear raised).
+  - Attacks: two spear sweeps, a lunging thrust (reference pose 6), an
+    overhead cut (reference pose 7), down and up thrusts, and the charged
+    spin.
+  - The spear is carried on the back and drawn into the hand for combat,
+    with two-bone IK for the hands.
+  - Secondary motion: simulated hair, spring-driven cloak and ribbons.
+- **Hitbox sync.** The spear's reach now sets the melee ranges (slash 1.75,
+  air 1.7, finisher 1.85 m, previously 2.05, 2.05 and 2.35), and the slash
+  arcs are gold to match the spearhead.
+- **Fixes.**
+  - The rig placed the hips at ground level, burying the old character up
+    to its robe and the new one by 0.13 m. Fixed.
+  - Shaders now compile during the loading screen instead of on first sight.
+    The new character's materials had added about 0.6 s to the freeze on the
+    first frame of play.
+
+**TESTED**
+- **Unit tests (54, all passing).** They include:
+  - spear-tip-versus-hit-volume sync for every attack;
+  - two-bone IK accuracy;
+  - hair-chain stability, ground contact, and streaming when running.
+
+  The controller and traversal tests are unchanged and pass.
+- **Browser comparison.** Side-by-side renders against the reference and
+  the pose sheet: three-quarter, front, four orthographic views, and the
+  thrust and overhead poses.
+- **In the game.** Idle from four angles, slash, jump, dash and run
+  captured in slow motion.
+- **End-to-end.** The movement test in `boot.spec.ts` now measures one
+  second of game time instead of 2.5 s of wall-clock time. In this container
+  the first frame of play can take about 2.7 s under software rendering. That
+  delay predates this pass, and it made the test flaky.
+
+**NOT YET TESTED**
+- The character on a real phone: readability, frame rate, and the cost of
+  simulating the hair and cloak on mobile CPUs.
+- Whether the model is close enough to the reference in the user's eyes.
+  This needs the user's confirmation.
+
+**PAUSED**
+- Colourful enemy-defeat effects (requested earlier) are on hold, as
+  instructed, until the protagonist's design is confirmed.
 
 ## NOT YET TESTED
 

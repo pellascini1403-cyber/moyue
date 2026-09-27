@@ -22,6 +22,7 @@ export class Rig {
   private restPos = new Map<string, Vector3>();
   private posOffset = new Map<string, Vector3>();
 
+  /** Register a joint. Its current position and rotation become its rest pose, so place it first. */
   add(name: string, j: Object3D): Object3D {
     j.name = name;
     this.joints.set(name, j);
@@ -36,10 +37,11 @@ export class Rig {
     return j;
   }
 
-  /** Blend toward `pose` with rate `lambda` (1/s). */
-  apply(pose: Pose, lambda: number, dt: number): void {
+  /** Blend toward `pose` with rate `lambda` (1/s). Joints in `skip` are left alone (driven by IK). */
+  apply(pose: Pose, lambda: number, dt: number, skip?: ReadonlySet<string>): void {
     const t = 1 - Math.exp(-lambda * dt);
     for (const [name, j] of this.joints) {
+      if (skip?.has(name)) continue;
       const p = pose[name];
       const rest = this.rest.get(name)!;
       if (p) {

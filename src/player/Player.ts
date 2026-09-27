@@ -40,7 +40,7 @@ export class Player {
       this.view = buildPlayerModel();
       this.anim = new PlayerAnimator(this.view, c);
       game.scene.add(this.view.root);
-      game.scene.add(this.view.scarf.mesh);
+      for (const m of this.view.worldMeshes) game.scene.add(m);
       this.shadowMat = new MeshBasicMaterial({ map: glowTexture(), color: 0x000000, transparent: true, opacity: 0.6, depthWrite: false });
       this.shadow = new Mesh(new CircleGeometry(0.45, 16), this.shadowMat);
       this.shadow.rotation.x = -Math.PI / 2;
@@ -100,7 +100,9 @@ export class Player {
       onFlare: (dir) => {
         if (this.moonlight < c.tuning.flareCost) return;
         this.moonlight -= c.tuning.flareCost;
-        game.spawnFlare(this.position.clone().add(new Vector3(0, 0.6, 0)).addScaledVector(dir, 0.4), dir);
+        this.anim?.onFlare();
+        // released from the left palm, which strikes forward at shoulder height
+        game.spawnFlare(this.position.clone().add(new Vector3(0, 0.5, 0)).addScaledVector(dir, 0.42), dir);
       },
       onSlamStart: () => game.sfx('slamStart', this.position),
       onSlamLand: () => {
@@ -273,11 +275,13 @@ export class Player {
     const c = this.ctrl;
     v.root.position.lerpVectors(this.prevPos, c.body.position, alpha);
     v.root.rotation.y = c.facing;
+    _o.copy(v.root.position).y += 0.3;
+    const hit = this.game.physics.raycast(_o, _down, 30);
+    // the hair and ribbons rest on the ground below
+    this.anim!.groundY = hit && hit.normal.y > 0.3 ? hit.point.y : -Infinity;
     this.anim!.update(dt, t);
     // blob shadow
     if (this.shadow && this.shadowMat) {
-      _o.copy(v.root.position).y += 0.3;
-      const hit = this.game.physics.raycast(_o, _down, 30);
       if (hit && hit.normal.y > 0.3) {
         const h = _o.y - 0.3 - hit.point.y;
         this.shadow.visible = true;
@@ -292,7 +296,7 @@ export class Player {
   setVisible(v: boolean): void {
     if (this.view) {
       this.view.root.visible = v;
-      this.view.scarf.mesh.visible = v;
+      for (const m of this.view.worldMeshes) m.visible = v;
     }
     if (this.shadow) this.shadow.visible = v;
   }

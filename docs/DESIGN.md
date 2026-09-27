@@ -8,10 +8,10 @@ carving terraces, temples and pagodas into an enormous hollow beneath the earth.
 Their lanterns burned with borrowed moonlight. When the moon began to dim, ink
 seeped from the stone and the Court fell silent.
 
-A **cicada**, sealed in jade at the top of the Descent for seventeen summers (the
-cicada's cycle of rebirth), wakes when the last bell stops tolling. It carries a
-slender jade **wing-blade** and a crimson scarf, and it goes down — as all light
-goes down.
+A small **masked warrior**, sealed in jade at the top of the Descent for seventeen
+summers (the cicada's cycle of rebirth), wakes when the last bell stops tolling.
+Behind a red-lacquered mask, with a great copper mane and a flame-headed spear,
+it goes down — as all light goes down.
 
 Everything in the game — characters, creatures, architecture, lore, dialogue,
 music, sound, UI and art — is original and generated in code. Hollow Knight is a
@@ -31,11 +31,13 @@ pentatonic music).
 
 ## Protagonist
 
+Built to the user's design reference; see [`PROTAGONIST.md`](PROTAGONIST.md) for measurements and notes.
+
 | Aspect | Design |
 | --- | --- |
-| Silhouette | Round dark-jade carapace head, wide-set glowing amber eyes, three ocelli, short antennae, ink robe, folded translucent wings worn like a cape, crimson scarf (verlet ribbon) |
-| Size | 1.0 m tall capsule (radius 0.3 m) |
-| Weapon | Jade wing-blade (0.6 m) |
+| Silhouette | A large red-lacquered mask head (hexagonal shield, gold cloud-scroll relief, big round black eyes in gold rims) with two pinned buns; a great copper mane rising above the head and falling to the ground behind; a bell-shaped black cloak over red-and-gold armour; large layered pauldrons; short black legs |
+| Size | 1.0 m to the top of the mask (collision capsule 1.0 m, radius 0.3 m); hair to ~1.34 m |
+| Weapon | Lacquered spear, 1.32 m, with a gold phoenix pommel, long gold ribbons and a head of sculpted flames. It rides diagonally across the back and comes to hand for combat |
 | Health | Lantern icons (5 base, +1 per 3 Moon Fragments) |
 | Resource | Moonlight (the ink-moon gauge): +11 per hit on a creature; 33 per heal or flare |
 
@@ -60,7 +62,7 @@ Keyboard/mouse and gamepad are fully supported too (see README).
 | Dash (Cloud Step) | 21 m/s × 0.17 s ≈ 3.6 m, 0.12 s invulnerability, 1 air dash per airtime, jump-cancel on ground |
 | Double jump (Wing Unfurl) | 2.15 m |
 | Wall cling/jump (Cicada's Grip) | only on carved / root-covered surfaces; slide 3 m/s; jump 12.8 up + 8.6 out |
-| Melee | 3-hit ground chain (0.30/0.30/0.40 s), air slash, automatic down-slash (pogo) / up-slash by soft aim |
+| Melee | 3-hit spear chain (two sweeps and a lunging thrust, 0.30/0.30/0.40 s, reach 1.75/1.75/1.85 m), overhead air cut (1.7 m), automatic down-thrust (pogo) / up-sweep by soft aim |
 | Charged spin (Moon-Cleave) | hold 0.62 s, 360°, 2.5 damage |
 | Hit feedback | hit-stop 45–90 ms, camera trauma, recoil, flash, ink/spark bursts, moonlight motes |
 | Damage taken | 1 lantern, 1.25 s i-frames, knockback, red vignette |

@@ -20,7 +20,9 @@ test('begin the descent → opening → gameplay; keyboard moves the player', as
   await page.keyboard.down('KeyW');
   await page.waitForFunction(() => (window as any).__MOYUE__.mode === 'play', null, { timeout: 60_000 });
   const before = await page.evaluate(() => (window as any).__MOYUE__.player.position.toArray());
-  await page.waitForTimeout(2500);
+  // hold for one second of *game* time: software WebGL in CI can take seconds per frame
+  const t0 = await page.evaluate(() => (window as any).__MOYUE__.time);
+  await page.waitForFunction((t0) => (window as any).__MOYUE__.time - t0 >= 1, t0, { timeout: 60_000 });
   await page.keyboard.up('KeyW');
   const after = await page.evaluate(() => (window as any).__MOYUE__.player.position.toArray());
   expect(Math.hypot(after[0] - before[0], after[2] - before[2])).toBeGreaterThan(0.5);

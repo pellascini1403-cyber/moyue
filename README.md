@@ -1,7 +1,7 @@
 # Mòyuè — The Eternal Descent · 墨月
 
-An original third-person 3D action-adventure for phones and tablets. A tiny
-cicada-born warrior wakes in a jade tomb at the top of an enormous forgotten
+An original third-person 3D action-adventure for phones and tablets. A small
+masked warrior wakes in a jade tomb at the top of an enormous forgotten
 cavern and descends through lantern-lit terraces, misty cloisters and a crimson
 sanctum toward a fallen moon.
 

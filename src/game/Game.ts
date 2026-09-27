@@ -268,7 +268,27 @@ export class Game implements MenuHost {
     await this.world.build(this.defs, onProgress);
     this.player = new Player(this);
     for (const r of this.world.regions) this.spawnRegion(r);
+    // compile every shader behind the loading screen: without this the first
+    // frame of play froze for seconds while materials compiled on first sight
+    onProgress?.(0.99, 'Grinding ink…');
+    await this.precompileShaders();
     this.mode = 'title';
+  }
+
+  private async precompileShaders(): Promise<void> {
+    const hidden: { visible: boolean }[] = [];
+    this.scene.traverse((o) => {
+      if (!o.visible) {
+        hidden.push(o);
+        o.visible = true;
+      }
+    });
+    try {
+      await this.renderer.gl.compileAsync(this.scene, this.cam.camera);
+    } catch {
+      /* compilation happens lazily instead */
+    }
+    for (const o of hidden) o.visible = false;
   }
 
   private spawnRegion(r: BuiltRegion): void {
@@ -547,7 +567,7 @@ export class Game implements MenuHost {
     c.body.lastSafe.copy(pos);
     c.body.hasSafe = true;
     this.player.prevPos.copy(pos);
-    this.player.anim?.resetScarf();
+    this.player.anim?.resetDynamics();
     this.cam.cinematic = null;
     this.cam.snapTo({ position: pos, velocity: c.velocity, grounded: true, facing: yaw }, yaw + Math.PI);
     this.region = this.world.regionAt(pos);
@@ -702,6 +722,7 @@ export class Game implements MenuHost {
     }
     if (this.mode === 'play' && step.pressed.lock) this.toggleLock();
     if (this.mode === 'play' && step.pressed.interact && this.interactTarget) {
+      this.player.anim?.onInteract();
       this.interactTarget.interact();
     }
     this.player.fixedUpdate(dt, step);
@@ -906,6 +927,7 @@ export class Game implements MenuHost {
   grantAbility(id: AbilityId, at: Vector3): void {
     this.progress.abilities[id] = true;
     this.player.ctrl.abilities[id] = true;
+    this.player.anim?.onAbility();
     const info = AbilityInfo[id];
     this.sfx('ability', at);
     this.hitstop(0.12);
@@ -1332,19 +1354,26 @@ export class Game implements MenuHost {
     const p = player.position;
     const yaw = player.ctrl.facing;
     const fwd = new Vector3(Math.sin(yaw), 0, Math.cos(yaw));
-    const jade = new Color(0.75, 1.5, 1.3);
-    const center = p.clone().add(new Vector3(0, 0.55, 0));
+    // arcs take the colour of the flaming spearhead
+    const jade = new Color(1.6, 0.95, 0.5);
+    const center = p.clone().add(new Vector3(0, 0.45, 0));
     switch (a.kind) {
       case 'slash1':
-      case 'airSlash':
         this.fx.slash(center.clone().addScaledVector(fwd, 0.1), fwd, new Vector3(0.15, 1, 0).normalize(), a.range, 2.3, jade, false);
         break;
+      case 'airSlash': {
+        // the overhead cut runs diagonally: high on the left, down to the right
+        const side = new Vector3(fwd.z, 0, -fwd.x);
+        const n = new Vector3(0, 1, 0).addScaledVector(side, -0.9).normalize();
+        this.fx.slash(center.clone().add(new Vector3(0, 0.2, 0)), fwd, n, a.range, 2.4, jade, true);
+        break;
+      }
       case 'slash2':
         this.fx.slash(center.clone().addScaledVector(fwd, 0.1), fwd, new Vector3(-0.2, 1, 0).normalize(), a.range, 2.3, jade, true);
         break;
       case 'slash3': {
         const side = new Vector3(fwd.z, 0, -fwd.x);
-        this.fx.slash(center.clone().add(new Vector3(0, 0.1, 0)), fwd, side, a.range + 0.2, 2.6, new Color(1.0, 1.6, 1.4), false, 0.2, 0.55);
+        this.fx.slash(center.clone().add(new Vector3(0, 0.1, 0)), fwd, side, a.range + 0.1, 1.2, new Color(1.8, 1.0, 0.45), false, 0.2, 0.3);
         break;
       }
       case 'downSlash': {
@@ -1484,7 +1513,7 @@ export class Game implements MenuHost {
     c.facing = yaw;
     c.iframes = hazard ? 1.0 : 0;
     this.player.prevPos.copy(c.body.position);
-    this.player.anim?.resetScarf();
+    this.player.anim?.resetDynamics();
   }
 
   debugInfo(): Record<string, unknown> {

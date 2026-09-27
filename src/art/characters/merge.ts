@@ -22,12 +22,14 @@ export function mergeRigParts(root: Object3D): number {
     for (const arr of groups.values()) {
       if (arr.length < 2) continue;
       const geos: BufferGeometry[] = [];
+      // vertex colours survive only if every part has them (the material decides whether they are used)
+      const keepColor = arr.every((m) => !!m.geometry.getAttribute('color'));
       for (const m of arr) {
         m.updateMatrix();
         let g = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone();
         g.applyMatrix4(new Matrix4().copy(m.matrix));
         for (const name of Object.keys(g.attributes)) {
-          if (name !== 'position' && name !== 'normal' && name !== 'uv') g.deleteAttribute(name);
+          if (name !== 'position' && name !== 'normal' && name !== 'uv' && !(keepColor && name === 'color')) g.deleteAttribute(name);
         }
         if (!g.getAttribute('uv')) {
           // keep attribute sets identical for merging

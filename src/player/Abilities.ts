@@ -33,7 +33,7 @@ export const AbilityInfo: Record<AbilityId, { name: string; hanzi: string; desc:
   doubleJump: {
     name: 'Wing Unfurl',
     hanzi: '振翅',
-    desc: 'The long-folded wings remember the sky. Beat them once more while airborne.',
+    desc: 'The cloak opens like the wings it was woven to remember. Beat it once more while airborne.',
     how: 'Press JUMP again while in the air.',
   },
   wallCling: {
@@ -45,8 +45,8 @@ export const AbilityInfo: Record<AbilityId, { name: string; hanzi: string; desc:
   chargedSlash: {
     name: 'Moon-Cleave',
     hanzi: '月斩',
-    desc: 'Gather moonlight along the wing-blade, then release it in a full circle.',
-    how: 'Hold ATTACK until the blade glows, then release.',
+    desc: 'Gather moonlight along the spear, then release it in a full circle.',
+    how: 'Hold ATTACK until the spearhead glows, then release.',
   },
   bellStrike: {
     name: 'Bell Strike',
