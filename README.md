@@ -94,7 +94,7 @@ src/
   story/       lore, dialogue, region names
 tests/         Vitest unit + traversal simulations
 e2e/           Playwright end-to-end tests
-scripts/       dev helpers (screenshots, audio/combat smoke checks)
+scripts/       dev helpers (screenshots, audio/combat smoke checks, a rendered playthrough)
 ```
 
 ## Packaging for the app stores

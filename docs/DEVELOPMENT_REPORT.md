@@ -193,6 +193,14 @@ Playwright 1.56.1, with software WebGL (SwiftShader).
   Sanctum were captured and reviewed after each visual change. Issues found
   this way and fixed: an oversaturated tomb light, a lime-coloured dais, and a
   blank screen after the opening.
+* **Rendered playthrough (`playthrough.mjs`).** With the dev server running,
+  `node scripts/playthrough.mjs [captureDir] [segment]` plays the critical
+  path in the real, rendered game: the Threshold, the Terraces, Mistfall
+  without abilities (the Great Gap with jump + dash), the Hanging Stair and
+  the Sanctum up to breaking the seal. Inputs are injected per fixed step, so
+  the frame rate does not matter. It can optionally capture the gameplay
+  camera at key legs. All five segments pass. The carved chimney is covered
+  only by the headless traversal test.
 * **Autopilot fights (`combat-check.mjs`).** Mites were killed, the Cloud Step
   arena was cleared and its altar unsealed, and the Censer Warden and Tolling
   Abbot were defeated with their flags set and altars unsealed. There were no
@@ -445,6 +453,10 @@ could not catch this because they do not render.
   from the far ledge.
 - Captures show the raft, its lantern and the trial altar visible again.
 - 67 unit tests and 19 E2E tests pass.
+
+- **The whole critical path in the rendered game.** All five segments of
+  `scripts/playthrough.mjs` pass, from the tomb to breaking the seal. No
+  other invisible or blocking objects were found.
 
 **NOT YET TESTED**
 - Whether this was the exact spot where the user was stuck. The comment did
